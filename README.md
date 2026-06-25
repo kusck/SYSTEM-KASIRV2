@@ -37,3 +37,6 @@ Pilihan paling mudah:
 ## Catatan penting
 
 Jangan pakai `prisma migrate reset` di database production karena bisa menghapus data.
+password BSpp88WG6V25KL9v
+git remote remove origin
+git remote add origin https://github.com/kusck/SYSTEM-KASIRV2.git
