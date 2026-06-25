@@ -1,0 +1,11 @@
+{
+  "/_global-error/page": "app/_global-error/page.js",
+  "/_not-found/page": "app/_not-found/page.js",
+  "/api/cashbook/route": "app/api/cashbook/route.js",
+  "/api/cashbook/summary/route": "app/api/cashbook/summary/route.js",
+  "/api/transactions/route": "app/api/transactions/route.js",
+  "/buku-kas/page": "app/buku-kas/page.js",
+  "/dashboard/page": "app/dashboard/page.js",
+  "/kasir/page": "app/kasir/page.js",
+  "/page": "app/page.js"
+}

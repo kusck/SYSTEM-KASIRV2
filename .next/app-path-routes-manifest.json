@@ -1,0 +1,11 @@
+{
+  "/_global-error/page": "/_global-error",
+  "/_not-found/page": "/_not-found",
+  "/api/cashbook/route": "/api/cashbook",
+  "/api/cashbook/summary/route": "/api/cashbook/summary",
+  "/api/transactions/route": "/api/transactions",
+  "/buku-kas/page": "/buku-kas",
+  "/dashboard/page": "/dashboard",
+  "/kasir/page": "/kasir",
+  "/page": "/"
+}
