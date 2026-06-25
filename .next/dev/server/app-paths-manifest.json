@@ -1,3 +1,6 @@
 {
+  "/api/cashbook/summary/route": "app/api/cashbook/summary/route.js",
+  "/dashboard/page": "app/dashboard/page.js",
+  "/kasir/page": "app/kasir/page.js",
   "/page": "app/page.js"
 }
