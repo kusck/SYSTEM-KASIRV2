@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
+const cashierOptions = ['IBU YUNINGSIH', 'KARYAWAN'];
+
 function invoiceNo() {
   const d = new Date();
   const pad = (n: number) => String(n).padStart(2, '0');
@@ -17,8 +19,9 @@ export async function POST(req: Request) {
     const body = await req.json();
     const total = Number(body.total || 0);
     const paidAmount = Number(body.paidAmount || 0);
-    const cashierName = String(body.cashierName || 'Kasir');
+    const cashierName = String(body.cashierName || '').trim();
 
+    if (!cashierOptions.includes(cashierName)) return NextResponse.json({ message: 'Nama kasir wajib dipilih' }, { status: 400 });
     if (total <= 0) return NextResponse.json({ message: 'Total penjualan wajib lebih dari 0' }, { status: 400 });
     if (paidAmount < total) return NextResponse.json({ message: 'Uang pembeli kurang' }, { status: 400 });
 

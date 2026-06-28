@@ -66,6 +66,14 @@ body {
   width: 100%;
 }
 
+.page-section-gap {
+  gap: 24px;
+}
+
+.form-card {
+  padding: 28px;
+}
+
 /* ── Glass utility ── */
 .glass {
   background: rgba(255,255,255,0.72);
@@ -105,7 +113,7 @@ body {
   width: 100%;
   border: 1.5px solid rgba(16,185,129,0.13);
   border-radius: 12px;
-  padding: 11px 16px;
+  padding: 12px 16px;
   outline: none;
   background: #ffffff;
   font-size: 15px;
@@ -134,7 +142,7 @@ body {
   gap: 8px;
   border: none;
   border-radius: 12px;
-  padding: 11px 22px;
+  padding: 12px 22px;
   font-weight: 600;
   font-size: 14px;
   font-family: inherit;
@@ -328,7 +336,7 @@ body {
 
 .table-custom th {
   background: #f8faf9;
-  padding: 13px 16px;
+  padding: 14px 16px;
   font-weight: 700;
   font-size: 12px;
   text-transform: uppercase;
@@ -339,7 +347,7 @@ body {
 }
 
 .table-custom td {
-  padding: 13px 16px;
+  padding: 14px 16px;
   border-bottom: 1px solid rgba(16,185,129,0.05);
   color: var(--text);
   vertical-align: middle;
@@ -378,7 +386,7 @@ body {
 /* ── Layout helpers ── */
 .page-grid-2 {
   display: grid;
-  gap: 20px;
+  gap: 24px;
   grid-template-columns: 1fr;
 }
 @media (min-width: 720px) {
@@ -390,7 +398,7 @@ body {
 
 .page-grid-3 {
   display: grid;
-  gap: 14px;
+  gap: 16px;
   grid-template-columns: 1fr;
 }
 @media (min-width: 540px) {
@@ -402,7 +410,7 @@ body {
 
 .page-grid-4 {
   display: grid;
-  gap: 14px;
+  gap: 16px;
   grid-template-columns: repeat(2, 1fr);
 }
 @media (min-width: 900px) {
@@ -411,7 +419,7 @@ body {
 
 .feat-grid {
   display: grid;
-  gap: 16px;
+  gap: 18px;
   grid-template-columns: 1fr;
 }
 @media (min-width: 580px) {
@@ -437,7 +445,7 @@ body {
 .kasir-btn-group {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 10px;
+  gap: 12px;
 }
 @media (max-width: 400px) {
   .kasir-btn-group {
@@ -448,7 +456,7 @@ body {
 /* ── Summary cards row in buku-kas ── */
 .summary-grid {
   display: grid;
-  gap: 14px;
+  gap: 16px;
   grid-template-columns: 1fr;
 }
 @media (min-width: 480px) {
@@ -461,7 +469,7 @@ body {
 /* ── Stat cards (dashboard today) ── */
 .stats-grid-today {
   display: grid;
-  gap: 12px;
+  gap: 16px;
   grid-template-columns: repeat(2, 1fr);
 }
 @media (min-width: 900px) {
@@ -470,7 +478,7 @@ body {
 
 .stats-grid-month {
   display: grid;
-  gap: 12px;
+  gap: 16px;
   grid-template-columns: 1fr;
 }
 @media (min-width: 540px) {
@@ -498,7 +506,7 @@ body {
   .app-shell {
     padding-left: 12px;
     padding-right: 12px;
-    padding-top: 16px;
+    padding-top: 18px;
     padding-bottom: 48px;
   }
 
@@ -514,6 +522,15 @@ body {
   }
   .card {
     border-radius: 16px;
+  }
+
+  .form-card {
+    padding: 22px;
+  }
+
+  .page-grid-2,
+  .page-section-gap {
+    gap: 18px;
   }
 
   .login-panel {

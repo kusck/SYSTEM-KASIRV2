@@ -10,11 +10,24 @@ import {
   Receipt,
   Banknote,
   Coins,
+  UserRound,
 } from 'lucide-react';
+
+const cashierOptions = ['IBU YUNINGSIH', 'KARYAWAN'];
+
+function onlyDigits(value: string) {
+  return value.replace(/\D/g, '');
+}
+
+function formatInputNumber(value: string) {
+  if (!value) return '';
+  return Number(value).toLocaleString('id-ID');
+}
 
 export default function KasirPage() {
   const [total,   setTotal]   = useState('');
   const [paid,    setPaid]    = useState('');
+  const [cashier, setCashier] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
 
@@ -25,12 +38,17 @@ export default function KasirPage() {
 
   async function submit() {
     setMessage('');
+    if (!cashier) {
+      setMessage('Pilih nama kasir terlebih dahulu.');
+      return;
+    }
+
     setLoading(true);
     try {
       const res = await fetch('/api/transactions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ total: totalNumber, paidAmount: paidNumber, cashierName: 'Kasir' }),
+        body: JSON.stringify({ total: totalNumber, paidAmount: paidNumber, cashierName: cashier }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Gagal menyimpan transaksi');
@@ -47,10 +65,10 @@ export default function KasirPage() {
   const isSuccess = message.toLowerCase().includes('berhasil');
 
   return (
-    <div className="page-grid-2">
+    <div className="page-grid-2 page-section-gap">
 
       {/* ── Left: Form ── */}
-      <section className="card" style={{ padding:'28px 28px 24px' }}>
+      <section className="card form-card">
         {/* header */}
         <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:28 }}>
           <div style={{
@@ -72,6 +90,28 @@ export default function KasirPage() {
         </div>
 
         <div style={{ display:'flex', flexDirection:'column', gap:18 }}>
+          {/* Kasir */}
+          <div>
+            <label style={{
+              display:'flex', alignItems:'center', gap:7,
+              fontSize:13, fontWeight:600, color:'#475569', marginBottom:8,
+            }}>
+              <UserRound size={14} color="#94a3b8" />
+              Nama Kasir
+            </label>
+            <select
+              className="input"
+              value={cashier}
+              onChange={(e) => setCashier(e.target.value)}
+              style={{ cursor:'pointer', fontWeight:700 }}
+            >
+              <option value="">Pilih kasir yang melayani</option>
+              {cashierOptions.map((name) => (
+                <option key={name} value={name}>{name}</option>
+              ))}
+            </select>
+          </div>
+
           {/* Total penjualan */}
           <div>
             <label style={{
@@ -89,10 +129,10 @@ export default function KasirPage() {
               <input
                 className="input"
                 style={{ paddingLeft:42, fontSize:16, fontWeight:700 }}
-                type="number"
-                min="0"
-                value={total}
-                onChange={(e) => setTotal(e.target.value)}
+                type="text"
+                inputMode="numeric"
+                value={formatInputNumber(total)}
+                onChange={(e) => setTotal(onlyDigits(e.target.value))}
                 placeholder="Masukkan total nominal belanja"
               />
             </div>
@@ -115,10 +155,10 @@ export default function KasirPage() {
               <input
                 className="input"
                 style={{ paddingLeft:42, fontSize:16, fontWeight:700 }}
-                type="number"
-                min="0"
-                value={paid}
-                onChange={(e) => setPaid(e.target.value)}
+                type="text"
+                inputMode="numeric"
+                value={formatInputNumber(paid)}
+                onChange={(e) => setPaid(onlyDigits(e.target.value))}
                 placeholder="Masukkan nominal tunai pembeli"
               />
             </div>
@@ -159,7 +199,7 @@ export default function KasirPage() {
               ) : 'Proses Pembayaran'}
             </button>
             <button
-              onClick={() => { setTotal(''); setPaid(''); setMessage(''); }}
+              onClick={() => { setTotal(''); setPaid(''); setCashier(''); setMessage(''); }}
               className="btn btn-light"
               style={{ fontSize:13.5, padding:'11px 0' }}
             >
@@ -192,7 +232,7 @@ export default function KasirPage() {
       </section>
 
       {/* ── Right: Summary ── */}
-      <aside className="card" style={{ padding:'28px 28px 24px' }}>
+      <aside className="card form-card">
         <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:6 }}>
           <Receipt size={18} color="#10b981" />
           <h2 style={{ margin:0, fontSize:17, fontWeight:700, color:'#0b1a13' }}>Struk Ringkasan</h2>
@@ -200,6 +240,18 @@ export default function KasirPage() {
         <p style={{ margin:'0 0 22px', fontSize:12, color:'#94a3b8' }}>Detail kalkulasi pembayaran POS</p>
 
         <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+          <div style={{
+            background:'#f8faf9', border:'1px solid #e2e8f0',
+            borderRadius:14, padding:'14px 16px',
+          }}>
+            <p style={{ margin:'0 0 4px', fontSize:10.5, fontWeight:700, letterSpacing:'0.08em', textTransform:'uppercase', color:'#94a3b8' }}>
+              Kasir
+            </p>
+            <p style={{ margin:0, fontSize:17, fontWeight:800, color:'#0f172a' }}>
+              {cashier || 'Belum dipilih'}
+            </p>
+          </div>
+
           {/* Total penjualan */}
           <div style={{
             background:'#f8faf9', border:'1px solid #e2e8f0',

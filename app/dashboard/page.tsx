@@ -15,7 +15,7 @@ import {
 type Summary = {
   today: { income: number; expense: number; balance: number; transactions: number };
   month: { income: number; expense: number; balance: number; transactions: number };
-  recent: { id: string; type: 'INCOME' | 'EXPENSE'; category: string; description: string; amount: number; createdAt: string }[];
+  recent: { id: string; type: 'INCOME' | 'EXPENSE'; category: string; description: string; amount: number; cashierName: string; createdAt: string }[];
 };
 
 export default function DashboardPage() {
@@ -159,6 +159,7 @@ export default function DashboardPage() {
                   <th>Jenis</th>
                   <th>Kategori</th>
                   <th>Keterangan</th>
+                  <th>Kasir</th>
                   <th style={{ textAlign:'right' }}>Nominal</th>
                 </tr>
               </thead>
@@ -178,6 +179,9 @@ export default function DashboardPage() {
                     <td style={{ fontWeight:600, color:'#334155' }}>{i.category}</td>
                     <td style={{ color:'#64748b', maxWidth:200, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
                       {i.description || '-'}
+                    </td>
+                    <td style={{ color:'#64748b', fontSize:12, fontWeight:700, whiteSpace:'nowrap' }}>
+                      {i.cashierName || '-'}
                     </td>
                     <td style={{ textAlign:'right', fontWeight:700, whiteSpace:'nowrap', color: i.type === 'INCOME' ? '#059669' : '#dc2626' }}>
                       {i.type === 'INCOME' ? '+' : '-'} {rupiah(i.amount)}
