@@ -16,6 +16,12 @@ enum PaymentMethod {
   CASH
 }
 
+enum StockMovementType {
+  IN
+  OUT
+  ADJUSTMENT
+}
+
 model Transaction {
   id          String        @id @default(cuid())
   invoiceNo   String        @unique
@@ -66,4 +72,38 @@ model CashbookDailyHistory {
   cashbooks        Cashbook[]
 
   @@map("cashbook_daily_history")
+}
+
+model Product {
+  id          String          @id @default(cuid())
+  sku         String          @unique
+  name        String
+  category    String
+  price       Int
+  stock       Int             @default(0)
+  minStock    Int             @default(0)
+  imageUrl    String?
+  description String?
+  isActive    Boolean         @default(true)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  movements   StockMovement[]
+
+  @@map("products")
+}
+
+model StockMovement {
+  id          String            @id @default(cuid())
+  productId   String
+  type        StockMovementType
+  quantity    Int
+  stockBefore Int
+  stockAfter  Int
+  note        String?
+  actorName   String            @default("Admin")
+  createdAt   DateTime          @default(now())
+  product     Product           @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+  @@map("stock_movements")
 }
