@@ -3,12 +3,13 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import { LayoutDashboard, Receipt, BookOpen, Menu, X, Zap } from 'lucide-react';
+import { LayoutDashboard, Receipt, BookOpen, Menu, X, Zap, History } from 'lucide-react';
 
 const links = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/kasir',     label: 'Kasir',     icon: Receipt },
   { href: '/buku-kas',  label: 'Buku Kas',  icon: BookOpen },
+  { href: '/riwayat-buku-kas-harian', label: 'Riwayat Harian', icon: History },
 ];
 
 export default function NavbarClient() {

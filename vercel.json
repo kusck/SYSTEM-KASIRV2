@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/cashbook/reset",
+      "schedule": "0 15 * * *"
+    }
+  ]
+}

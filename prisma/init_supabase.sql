@@ -33,8 +33,38 @@ CREATE TABLE IF NOT EXISTS "cashbook" (
   "description" TEXT NOT NULL,
   "amount" INTEGER NOT NULL,
   "transactionId" TEXT,
+  "resetHistoryId" TEXT,
   "cashierName" TEXT NOT NULL DEFAULT 'Kasir',
+  "archivedAt" TIMESTAMP(3),
   "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
   "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT "cashbook_transactionId_fkey" FOREIGN KEY ("transactionId") REFERENCES "transactions"("id") ON DELETE SET NULL ON UPDATE CASCADE
 );
+
+CREATE TABLE IF NOT EXISTS "cashbook_daily_history" (
+  "id" TEXT PRIMARY KEY,
+  "resetDate" TEXT UNIQUE NOT NULL,
+  "resetTime" TEXT NOT NULL,
+  "resetAt" TIMESTAMP(3) NOT NULL,
+  "totalIncome" INTEGER NOT NULL,
+  "totalExpense" INTEGER NOT NULL,
+  "endingBalance" INTEGER NOT NULL,
+  "transactionCount" INTEGER NOT NULL,
+  "resetMode" TEXT NOT NULL DEFAULT 'AUTO',
+  "createdBy" TEXT NOT NULL DEFAULT 'System',
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+ALTER TABLE "cashbook"
+  ADD COLUMN IF NOT EXISTS "resetHistoryId" TEXT,
+  ADD COLUMN IF NOT EXISTS "archivedAt" TIMESTAMP(3);
+
+DO $$ BEGIN
+  ALTER TABLE "cashbook"
+    ADD CONSTRAINT "cashbook_resetHistoryId_fkey"
+    FOREIGN KEY ("resetHistoryId") REFERENCES "cashbook_daily_history"("id")
+    ON DELETE SET NULL ON UPDATE CASCADE;
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;

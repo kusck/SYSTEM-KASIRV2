@@ -39,10 +39,31 @@ model Cashbook {
   description   String
   amount        Int
   transactionId String?
+  resetHistoryId String?
   cashierName   String       @default("Kasir")
+  archivedAt     DateTime?
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
   transaction   Transaction? @relation(fields: [transactionId], references: [id], onDelete: SetNull)
+  resetHistory  CashbookDailyHistory? @relation(fields: [resetHistoryId], references: [id], onDelete: SetNull)
 
   @@map("cashbook")
+}
+
+model CashbookDailyHistory {
+  id               String     @id @default(cuid())
+  resetDate        String     @unique
+  resetTime        String
+  resetAt          DateTime
+  totalIncome      Int
+  totalExpense     Int
+  endingBalance    Int
+  transactionCount Int
+  resetMode        String     @default("AUTO")
+  createdBy        String     @default("System")
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+  cashbooks        Cashbook[]
+
+  @@map("cashbook_daily_history")
 }

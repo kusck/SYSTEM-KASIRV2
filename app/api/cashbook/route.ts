@@ -1,13 +1,17 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { resetDailyCashbook } from '@/lib/cashbookReset';
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const type = searchParams.get('type');
   const q = searchParams.get('q') || '';
 
+  await resetDailyCashbook({ mode: 'AUTO' });
+
   const data = await prisma.cashbook.findMany({
     where: {
+      resetHistoryId: null,
       ...(type === 'INCOME' || type === 'EXPENSE' ? { type } : {}),
       ...(q ? { OR: [{ description: { contains: q, mode: 'insensitive' } }, { category: { contains: q, mode: 'insensitive' } }] } : {}),
     },
