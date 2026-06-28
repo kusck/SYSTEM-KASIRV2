@@ -1,7 +1,8 @@
 import './globals.css';
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Plus_Jakarta_Sans } from 'next/font/google';
 import NavbarClient from './components/NavbarClient';
+import PwaRegister from './pwa-register';
 
 const jakarta = Plus_Jakarta_Sans({
   subsets: ['latin'],
@@ -10,8 +11,27 @@ const jakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
+  applicationName: 'PASUNDAN POS',
   title: 'PASUNDAN POS',
   description: 'Kasir manual dan buku kas untuk bisnis modern',
+  manifest: '/manifest.webmanifest',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'PASUNDAN POS',
+  },
+  icons: {
+    icon: [
+      { url: '/icons/icon.svg', type: 'image/svg+xml' },
+      { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
+    ],
+    apple: [{ url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' }],
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: '#047857',
 };
 
 export default function RootLayout({
@@ -22,9 +42,10 @@ export default function RootLayout({
   return (
     <html lang="id" className={jakarta.variable}>
       <body className="font-sans antialiased">
+        <PwaRegister />
         <NavbarClient />
         {/* Single, consistent content wrapper — DO NOT add max-w / px inside children pages */}
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 pb-16 pt-6">
+        <div className="app-shell mx-auto max-w-6xl px-4 sm:px-6 pb-16 pt-6">
           {children}
         </div>
       </body>

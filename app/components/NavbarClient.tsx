@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import { LayoutDashboard, Receipt, BookOpen, Menu, X, Zap, History } from 'lucide-react';
+import { LayoutDashboard, Receipt, BookOpen, Menu, X, Zap, History, LogOut } from 'lucide-react';
 
 const links = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -17,6 +17,8 @@ export default function NavbarClient() {
   const [open,     setOpen]     = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
+  const isLogin = pathname === '/login';
+
   useEffect(() => { setOpen(false); }, [pathname]);
 
   useEffect(() => {
@@ -24,6 +26,13 @@ export default function NavbarClient() {
     window.addEventListener('scroll', fn, { passive: true });
     return () => window.removeEventListener('scroll', fn);
   }, []);
+
+  async function logout() {
+    await fetch('/api/auth/logout', { method: 'POST' });
+    window.location.href = '/login';
+  }
+
+  if (isLogin) return null;
 
   return (
     <header
@@ -41,18 +50,22 @@ export default function NavbarClient() {
         transition: 'background 0.25s ease, box-shadow 0.25s ease',
       }}
     >
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-4 sm:px-6 h-14">
+      <div className="mx-auto flex max-w-6xl items-center justify-between px-4 sm:px-6 h-16">
 
         {/* ── Logo ── */}
-        <Link href="/" className="flex items-center gap-2.5 no-underline group">
+        <Link
+          href="/"
+          className="flex items-center no-underline group"
+          style={{ columnGap: 12 }}
+        >
           <span
             style={{
               display: 'inline-flex',
               alignItems: 'center',
               justifyContent: 'center',
-              width: 36,
-              height: 36,
-              borderRadius: 10,
+              width: 42,
+              height: 42,
+              borderRadius: 12,
               background: 'linear-gradient(135deg,#10b981,#0d9488)',
               color: '#fff',
               boxShadow: '0 4px 14px rgba(16,185,129,0.35)',
@@ -60,12 +73,12 @@ export default function NavbarClient() {
             }}
             className="group-hover:scale-105"
           >
-            <Zap size={16} strokeWidth={2.5} />
+            <Zap size={20} strokeWidth={2.5} />
           </span>
           <span
             style={{
               fontWeight: 800,
-              fontSize: 16,
+              fontSize: 18,
               letterSpacing: '-0.02em',
               background: 'linear-gradient(90deg,#065f46,#0d9488)',
               WebkitBackgroundClip: 'text',
@@ -79,12 +92,12 @@ export default function NavbarClient() {
 
         {/* ── Desktop nav pill ── */}
         <nav
-          className="hidden sm:flex items-center gap-0.5"
+          className="hidden lg:flex items-center gap-0.5"
           style={{
             background: 'rgba(241,245,249,0.85)',
             border: '1px solid rgba(203,213,225,0.6)',
-            borderRadius: 14,
-            padding: '4px',
+            borderRadius: 16,
+            padding: '5px',
           }}
         >
           {links.map(({ href, label, icon: Icon }) => {
@@ -96,10 +109,10 @@ export default function NavbarClient() {
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
-                  gap: 6,
-                  padding: '7px 16px',
-                  borderRadius: 10,
-                  fontSize: 13.5,
+                  gap: 8,
+                  padding: '9px 18px',
+                  borderRadius: 12,
+                  fontSize: 14.5,
                   fontWeight: 600,
                   textDecoration: 'none',
                   transition: 'all 0.18s ease',
@@ -109,33 +122,52 @@ export default function NavbarClient() {
                   border: active ? '1px solid rgba(16,185,129,0.12)' : '1px solid transparent',
                 }}
               >
-                <Icon size={14} style={{ color: active ? '#10b981' : '#94a3b8', flexShrink: 0 }} />
+                <Icon size={17} style={{ color: active ? '#10b981' : '#94a3b8', flexShrink: 0 }} />
                 {label}
               </Link>
             );
           })}
+          <button
+            onClick={logout}
+            title="Logout"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: 38,
+              height: 38,
+              borderRadius: 12,
+              border: '1px solid transparent',
+              background: 'transparent',
+              color: '#94a3b8',
+              cursor: 'pointer',
+              marginLeft: 2,
+            }}
+          >
+            <LogOut size={16} />
+          </button>
         </nav>
 
         {/* ── Mobile hamburger ── */}
         <button
           onClick={() => setOpen(!open)}
-          className="sm:hidden"
+          className="lg:hidden"
           style={{
             display: 'inline-flex',
             alignItems: 'center',
             justifyContent: 'center',
-            width: 36,
-            height: 36,
-            borderRadius: 9,
+            width: 42,
+            height: 42,
+            borderRadius: 11,
             background: 'rgba(16,185,129,0.07)',
             border: '1px solid rgba(16,185,129,0.14)',
             color: '#047857',
             cursor: 'pointer',
             transition: 'background 0.15s ease',
-          }}
-          aria-label="Toggle menu"
-        >
-          {open ? <X size={18} /> : <Menu size={18} />}
+        }}
+        aria-label="Toggle menu"
+      >
+          {open ? <X size={21} /> : <Menu size={21} />}
         </button>
       </div>
 
@@ -143,13 +175,13 @@ export default function NavbarClient() {
       <div
         style={{
           overflow: 'hidden',
-          maxHeight: open ? 220 : 0,
+          maxHeight: open ? 320 : 0,
           opacity: open ? 1 : 0,
           transition: 'max-height 0.3s ease, opacity 0.25s ease',
           borderTop: open ? '1px solid rgba(16,185,129,0.08)' : 'none',
           background: 'rgba(255,255,255,0.97)',
         }}
-        className="sm:hidden"
+        className="lg:hidden"
       >
         <div style={{ padding: '10px 16px 14px' }}>
           {links.map(({ href, label, icon: Icon }) => {
@@ -191,6 +223,27 @@ export default function NavbarClient() {
               </Link>
             );
           })}
+          <button
+            onClick={logout}
+            style={{
+              width: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 10,
+              padding: '10px 14px',
+              borderRadius: 11,
+              fontSize: 14,
+              fontWeight: 600,
+              color: '#b91c1c',
+              background: '#fef2f2',
+              border: '1px solid #fecaca',
+              cursor: 'pointer',
+              marginTop: 4,
+            }}
+          >
+            <LogOut size={16} />
+            Logout
+          </button>
         </div>
       </div>
     </header>

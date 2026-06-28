@@ -26,6 +26,17 @@ type DailyHistory = {
   createdBy: string;
 };
 
+async function readJsonResponse(res: Response) {
+  const text = await res.text();
+  if (!text) return null;
+
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw new Error('Server mengirim response tidak valid. Cek migration Supabase dan log Vercel.');
+  }
+}
+
 export default function RiwayatBukuKasHarianPage() {
   const [items, setItems] = useState<DailyHistory[]>([]);
   const [loading, setLoading] = useState(true);
@@ -34,9 +45,16 @@ export default function RiwayatBukuKasHarianPage() {
 
   async function load() {
     setLoading(true);
-    const res = await fetch('/api/cashbook/history');
-    setItems(await res.json());
-    setLoading(false);
+    try {
+      const res = await fetch('/api/cashbook/history');
+      const data = await readJsonResponse(res);
+      if (!res.ok) throw new Error(data?.message || 'Gagal memuat riwayat');
+      setItems(Array.isArray(data) ? data : []);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Gagal memuat riwayat');
+    } finally {
+      setLoading(false);
+    }
   }
 
   useEffect(() => { load(); }, []);
@@ -67,7 +85,7 @@ export default function RiwayatBukuKasHarianPage() {
         },
         body: JSON.stringify({ actor: 'Admin' }),
       });
-      const data = await res.json();
+      const data = await readJsonResponse(res);
       if (!res.ok) throw new Error(data.message || 'Reset manual gagal');
       setMessage(data.message || 'Reset manual berhasil');
       await load();

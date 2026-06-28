@@ -231,12 +231,12 @@ export default function BukuKasPage() {
             </div>
 
             {/* Search */}
-            <div style={{ display:'flex', gap:8 }}>
-              <div style={{ position:'relative' }}>
+            <div className="cashbook-search">
+              <div style={{ position:'relative', flex:1 }}>
                 <Search size={14} color="#94a3b8" style={{ position:'absolute', left:12, top:'50%', transform:'translateY(-50%)', pointerEvents:'none' }} />
                 <input
                   className="input"
-                  style={{ paddingLeft:34, paddingTop:9, paddingBottom:9, fontSize:13, width:200 }}
+                  style={{ paddingLeft:34, paddingTop:9, paddingBottom:9, fontSize:13 }}
                   placeholder="Cari keterangan..."
                   value={q} onChange={(e) => setQ(e.target.value)}
                 />

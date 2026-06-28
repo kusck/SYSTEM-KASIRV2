@@ -1,0 +1,47 @@
+{
+  "name": "PASUNDAN POS",
+  "short_name": "PASUNDAN",
+  "description": "Kasir manual dan buku kas untuk bisnis modern.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f4f8f6",
+  "theme_color": "#047857",
+  "categories": ["business", "productivity", "finance"],
+  "lang": "id",
+  "icons": [
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Kasir",
+      "short_name": "Kasir",
+      "url": "/kasir",
+      "description": "Buka halaman kasir."
+    },
+    {
+      "name": "Buku Kas",
+      "short_name": "Buku Kas",
+      "url": "/buku-kas",
+      "description": "Buka buku kas harian."
+    }
+  ]
+}
