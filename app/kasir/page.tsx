@@ -3,17 +3,22 @@
 import { useMemo, useState } from 'react';
 import { rupiah } from '@/lib/format';
 import {
-  Calculator,
-  RotateCcw,
-  CheckCircle2,
   AlertTriangle,
-  Receipt,
   Banknote,
+  Calculator,
+  CheckCircle2,
   Coins,
+  CreditCard,
+  Printer,
+  ReceiptText,
+  RotateCcw,
+  ShieldCheck,
   UserRound,
+  Wallet,
 } from 'lucide-react';
 
 const cashierOptions = ['IBU YUNINGSIH', 'KARYAWAN'];
+const quickAmounts = [50000, 100000, 150000, 200000];
 
 function onlyDigits(value: string) {
   return value.replace(/\D/g, '');
@@ -25,16 +30,17 @@ function formatInputNumber(value: string) {
 }
 
 export default function KasirPage() {
-  const [total,   setTotal]   = useState('');
-  const [paid,    setPaid]    = useState('');
+  const [total, setTotal] = useState('');
+  const [paid, setPaid] = useState('');
   const [cashier, setCashier] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
 
   const totalNumber = Number(total || 0);
-  const paidNumber  = Number(paid  || 0);
-  const change      = useMemo(() => Math.max(paidNumber - totalNumber, 0), [paidNumber, totalNumber]);
-  const kurang      = paidNumber > 0 && paidNumber < totalNumber;
+  const paidNumber = Number(paid || 0);
+  const change = useMemo(() => Math.max(paidNumber - totalNumber, 0), [paidNumber, totalNumber]);
+  const kurang = paidNumber > 0 && paidNumber < totalNumber;
+  const isSuccess = message.toLowerCase().includes('berhasil');
 
   async function submit() {
     setMessage('');
@@ -55,257 +61,186 @@ export default function KasirPage() {
       setMessage('Pembayaran berhasil. Transaksi otomatis masuk ke Buku Kas sebagai Uang Masuk.');
       setTotal('');
       setPaid('');
-    } catch (e) {
-      setMessage(e instanceof Error ? e.message : 'Terjadi error');
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Terjadi error');
     } finally {
       setLoading(false);
     }
   }
 
-  const isSuccess = message.toLowerCase().includes('berhasil');
+  function reset() {
+    setTotal('');
+    setPaid('');
+    setCashier('');
+    setMessage('');
+  }
 
   return (
-    <div className="page-grid-2 page-section-gap">
-
-      {/* ── Left: Form ── */}
-      <section className="card form-card">
-        {/* header */}
-        <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:28 }}>
-          <div style={{
-            width:42, height:42, borderRadius:12, flexShrink:0,
-            background:'linear-gradient(135deg,#10b981,#0d9488)',
-            color:'#fff', display:'flex', alignItems:'center', justifyContent:'center',
-            boxShadow:'0 4px 14px rgba(16,185,129,0.30)',
-          }}>
-            <Calculator size={20} />
-          </div>
-          <div>
-            <p style={{ margin:0, fontSize:10.5, fontWeight:700, letterSpacing:'0.10em', textTransform:'uppercase', color:'#10b981' }}>
-              Mesin Kasir Manual
-            </p>
-            <h1 style={{ margin:0, fontSize:21, fontWeight:800, letterSpacing:'-0.02em', color:'#0b1a13' }}>
-              Input Belanja &amp; Kembalian
-            </h1>
-          </div>
+    <div className="page-stack">
+      <div className="page-header">
+        <div>
+          <span className="eyebrow"><Calculator size={14} /> Mesin Kasir</span>
+          <h1>Transaksi cepat dan akurat</h1>
+          <p>Input total belanja, uang tunai diterima, lalu sistem menghitung kembalian secara real-time.</p>
         </div>
+      </div>
 
-        <div style={{ display:'flex', flexDirection:'column', gap:18 }}>
-          {/* Kasir */}
-          <div>
-            <label style={{
-              display:'flex', alignItems:'center', gap:7,
-              fontSize:13, fontWeight:600, color:'#475569', marginBottom:8,
-            }}>
-              <UserRound size={14} color="#94a3b8" />
-              Nama Kasir
+      <div className="cashier-grid">
+        <section className="section-card">
+          <div className="toolbar">
+            <div className="section-heading">
+              <span className="section-heading-icon"><ReceiptText size={20} /></span>
+              <div className="section-title">
+                <h2>Input Pembayaran</h2>
+                <p>Dirancang untuk kasir yang butuh gerak cepat.</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="form-stack">
+            <label className="field">
+              <span className="field-label"><UserRound size={14} /> Nama Kasir</span>
+              <div className="input-shell">
+                <span className="input-icon"><UserRound size={17} /></span>
+                <select className="select" value={cashier} onChange={(event) => setCashier(event.target.value)}>
+                  <option value="">Pilih kasir yang melayani</option>
+                  {cashierOptions.map((name) => (
+                    <option key={name} value={name}>{name}</option>
+                  ))}
+                </select>
+              </div>
             </label>
-            <select
-              className="input"
-              value={cashier}
-              onChange={(e) => setCashier(e.target.value)}
-              style={{ cursor:'pointer', fontWeight:700 }}
-            >
-              <option value="">Pilih kasir yang melayani</option>
-              {cashierOptions.map((name) => (
-                <option key={name} value={name}>{name}</option>
+
+            <label className="field">
+              <span className="field-label"><ReceiptText size={14} /> Total Penjualan Belanja</span>
+              <div className="input-shell has-prefix">
+                <span className="input-prefix">Rp</span>
+                <input
+                  className="input big-money-input"
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="off"
+                  value={formatInputNumber(total)}
+                  onChange={(event) => setTotal(onlyDigits(event.target.value))}
+                  placeholder="0"
+                />
+              </div>
+            </label>
+
+            <label className="field">
+              <span className="field-label"><Banknote size={14} /> Jumlah Uang Dibayar</span>
+              <div className="input-shell has-prefix">
+                <span className="input-prefix">Rp</span>
+                <input
+                  className="input big-money-input"
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="off"
+                  value={formatInputNumber(paid)}
+                  onChange={(event) => setPaid(onlyDigits(event.target.value))}
+                  placeholder="0"
+                />
+              </div>
+            </label>
+
+            <div className="quick-cash" aria-label="Nominal cepat">
+              <button type="button" onClick={() => setPaid(String(totalNumber))} disabled={totalNumber <= 0}>
+                Bayar Pas
+              </button>
+              {quickAmounts.map((amount) => (
+                <button key={amount} type="button" onClick={() => setPaid(String(amount))}>
+                  {rupiah(amount)}
+                </button>
               ))}
-            </select>
+            </div>
+
+            {kurang && (
+              <div className="toast error">
+                <AlertTriangle size={17} />
+                Uang tunai yang dibayarkan kurang dari total belanja.
+              </div>
+            )}
           </div>
 
-          {/* Total penjualan */}
-          <div>
-            <label style={{
-              display:'flex', alignItems:'center', gap:7,
-              fontSize:13, fontWeight:600, color:'#475569', marginBottom:8,
-            }}>
-              <Receipt size={14} color="#94a3b8" />
-              Total Penjualan Belanja
-            </label>
-            <div style={{ position:'relative' }}>
-              <span style={{
-                position:'absolute', left:14, top:'50%', transform:'translateY(-50%)',
-                fontWeight:700, color:'#94a3b8', fontSize:14, pointerEvents:'none',
-              }}>Rp</span>
-              <input
-                className="input"
-                style={{ paddingLeft:42, fontSize:16, fontWeight:700 }}
-                type="text"
-                inputMode="numeric"
-                value={formatInputNumber(total)}
-                onChange={(e) => setTotal(onlyDigits(e.target.value))}
-                placeholder="Masukkan total nominal belanja"
-              />
-            </div>
-          </div>
-
-          {/* Uang dibayar */}
-          <div>
-            <label style={{
-              display:'flex', alignItems:'center', gap:7,
-              fontSize:13, fontWeight:600, color:'#475569', marginBottom:8,
-            }}>
-              <Banknote size={14} color="#94a3b8" />
-              Jumlah Uang Dibayar (Tunai)
-            </label>
-            <div style={{ position:'relative' }}>
-              <span style={{
-                position:'absolute', left:14, top:'50%', transform:'translateY(-50%)',
-                fontWeight:700, color:'#94a3b8', fontSize:14, pointerEvents:'none',
-              }}>Rp</span>
-              <input
-                className="input"
-                style={{ paddingLeft:42, fontSize:16, fontWeight:700 }}
-                type="text"
-                inputMode="numeric"
-                value={formatInputNumber(paid)}
-                onChange={(e) => setPaid(onlyDigits(e.target.value))}
-                placeholder="Masukkan nominal tunai pembeli"
-              />
-            </div>
-          </div>
-
-          {/* Warning kurang */}
-          {kurang && (
-            <div style={{
-              display:'flex', alignItems:'center', gap:10,
-              background:'#fef2f2', border:'1px solid #fecaca',
-              borderRadius:12, padding:'12px 16px',
-              fontSize:13, fontWeight:600, color:'#b91c1c',
-            }} className="animate-fade-up">
-              <AlertTriangle size={16} style={{ flexShrink:0 }} />
-              Uang tunai yang dibayarkan kurang dari total belanja.
-            </div>
-          )}
-        </div>
-
-        {/* Actions */}
-        <div style={{ marginTop:24, paddingTop:20, borderTop:'1px solid #f1f5f9' }}>
-          <div className="kasir-btn-group">
+          <div className="button-row" style={{ marginTop: 22, paddingTop: 20, borderTop: '1px solid #e2e8f0' }}>
             <button
+              type="button"
               disabled={loading || kurang || totalNumber <= 0 || paidNumber <= 0}
               onClick={submit}
-              className="btn btn-primary"
-              style={{ fontSize:13.5, padding:'11px 0' }}
+              className="btn btn-primary btn-mobile-full"
             >
-              {loading ? (
-                <>
-                  <div style={{
-                    width:14, height:14, borderRadius:'50%',
-                    border:'2px solid rgba(255,255,255,0.25)',
-                    borderTopColor:'#fff', animation:'spin 0.7s linear infinite',
-                  }} />
-                  Menyimpan...
-                </>
-              ) : 'Proses Pembayaran'}
+              {loading ? <span className="button-spinner spinner" /> : <CreditCard size={17} />}
+              {loading ? 'Menyimpan...' : 'Bayar Sekarang'}
             </button>
-            <button
-              onClick={() => { setTotal(''); setPaid(''); setCashier(''); setMessage(''); }}
-              className="btn btn-light"
-              style={{ fontSize:13.5, padding:'11px 0' }}
-            >
-              <RotateCcw size={14} />
-              Reset Form
+            <button type="button" onClick={() => window.print()} className="btn btn-secondary btn-mobile-full">
+              <Printer size={17} />
+              Cetak
+            </button>
+            <button type="button" onClick={reset} className="btn btn-ghost btn-mobile-full">
+              <RotateCcw size={17} />
+              Reset
             </button>
           </div>
 
-          {/* Feedback message */}
           {message && (
-            <div
-              style={{
-                marginTop:14, display:'flex', alignItems:'flex-start', gap:10,
-                background: isSuccess ? '#f0fdf4' : '#fef2f2',
-                border: `1px solid ${isSuccess ? '#bbf7d0' : '#fecaca'}`,
-                borderRadius:12, padding:'12px 16px',
-                fontSize:13, fontWeight:600,
-                color: isSuccess ? '#15803d' : '#b91c1c',
-              }}
-              className="animate-fade-up"
-            >
-              {isSuccess
-                ? <CheckCircle2 size={16} style={{ flexShrink:0, marginTop:1 }} />
-                : <AlertTriangle size={16} style={{ flexShrink:0, marginTop:1 }} />
-              }
+            <div className={`toast ${isSuccess ? 'success' : 'error'}`} style={{ marginTop: 14 }}>
+              {isSuccess ? <CheckCircle2 size={17} /> : <AlertTriangle size={17} />}
               {message}
             </div>
           )}
-        </div>
-      </section>
+        </section>
 
-      {/* ── Right: Summary ── */}
-      <aside className="card form-card">
-        <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:6 }}>
-          <Receipt size={18} color="#10b981" />
-          <h2 style={{ margin:0, fontSize:17, fontWeight:700, color:'#0b1a13' }}>Struk Ringkasan</h2>
-        </div>
-        <p style={{ margin:'0 0 22px', fontSize:12, color:'#94a3b8' }}>Detail kalkulasi pembayaran POS</p>
-
-        <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
-          <div style={{
-            background:'#f8faf9', border:'1px solid #e2e8f0',
-            borderRadius:14, padding:'14px 16px',
-          }}>
-            <p style={{ margin:'0 0 4px', fontSize:10.5, fontWeight:700, letterSpacing:'0.08em', textTransform:'uppercase', color:'#94a3b8' }}>
-              Kasir
-            </p>
-            <p style={{ margin:0, fontSize:17, fontWeight:800, color:'#0f172a' }}>
-              {cashier || 'Belum dipilih'}
-            </p>
-          </div>
-
-          {/* Total penjualan */}
-          <div style={{
-            background:'#f8faf9', border:'1px solid #e2e8f0',
-            borderRadius:14, padding:'14px 16px',
-          }}>
-            <p style={{ margin:'0 0 4px', fontSize:10.5, fontWeight:700, letterSpacing:'0.08em', textTransform:'uppercase', color:'#94a3b8' }}>
-              Total Penjualan
-            </p>
-            <p style={{ margin:0, fontSize:22, fontWeight:800, color:'#0f172a', letterSpacing:'-0.02em' }}>
-              {rupiah(totalNumber)}
-            </p>
-          </div>
-
-          {/* Uang diterima */}
-          <div style={{
-            background:'#f8faf9', border:'1px solid #e2e8f0',
-            borderRadius:14, padding:'14px 16px',
-          }}>
-            <p style={{ margin:'0 0 4px', fontSize:10.5, fontWeight:700, letterSpacing:'0.08em', textTransform:'uppercase', color:'#94a3b8' }}>
-              Uang Tunai Diterima
-            </p>
-            <p style={{ margin:0, fontSize:22, fontWeight:800, color:'#0f172a', letterSpacing:'-0.02em' }}>
-              {rupiah(paidNumber)}
-            </p>
-          </div>
-
-          {/* Kembalian highlight */}
-          <div style={{
-            position:'relative', overflow:'hidden',
-            background:'linear-gradient(135deg,#064e3b,#065f46)',
-            borderRadius:18, padding:'18px 20px',
-            boxShadow:'0 8px 24px rgba(6,78,59,0.25)',
-          }}>
-            <div style={{
-              position:'absolute', top:-30, right:-30,
-              width:100, height:100, borderRadius:'50%',
-              background:'rgba(16,185,129,0.12)', filter:'blur(20px)', pointerEvents:'none',
-            }} />
-            <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:8, position:'relative' }}>
-              <Coins size={13} color="#6ee7b7" />
-              <span style={{ fontSize:10.5, fontWeight:700, letterSpacing:'0.10em', textTransform:'uppercase', color:'rgba(110,231,183,0.80)' }}>
-                Uang Kembalian
-              </span>
+        <aside className="section-card payment-summary">
+          <div className="section-heading">
+            <span className="section-heading-icon"><ShieldCheck size={20} /></span>
+            <div className="section-title">
+              <h2>Ringkasan Pembayaran</h2>
+              <p>Detail struk sebelum transaksi disimpan.</p>
             </div>
-            <p style={{ margin:0, fontSize:30, fontWeight:900, color:'#6ee7b7', letterSpacing:'-0.03em', position:'relative' }}>
-              {rupiah(change)}
-            </p>
           </div>
-        </div>
 
-        <div style={{ marginTop:22, paddingTop:18, borderTop:'1px dashed #e2e8f0', textAlign:'center', fontSize:11, color:'#94a3b8', fontWeight:500 }}>
-          * Terima kasih atas transaksi Anda *
-        </div>
-      </aside>
+          <div style={{ marginTop: 18 }}>
+            <div className="receipt-line">
+              <span>Kasir</span>
+              <strong>{cashier || 'Belum dipilih'}</strong>
+            </div>
+            <div className="receipt-line">
+              <span>Total Belanja</span>
+              <strong>{rupiah(totalNumber)}</strong>
+            </div>
+            <div className="receipt-line">
+              <span>Uang Diterima</span>
+              <strong>{rupiah(paidNumber)}</strong>
+            </div>
+            <div className="receipt-line">
+              <span>Status</span>
+              <strong style={{ color: kurang ? '#dc2626' : '#047857' }}>
+                {kurang ? 'Kurang Bayar' : paidNumber > 0 ? 'Siap Diproses' : 'Menunggu Input'}
+              </strong>
+            </div>
+          </div>
+
+          <div className="change-card">
+            <span><Coins size={14} /> Uang Kembalian</span>
+            <strong>{rupiah(change)}</strong>
+          </div>
+
+          <div className="surface-card" style={{ marginTop: 16, padding: 16, boxShadow: 'none' }}>
+            <div className="mobile-data-row">
+              <span>Metode</span>
+              <strong>Tunai</strong>
+            </div>
+            <div className="mobile-data-row" style={{ marginTop: 10 }}>
+              <span>Pencatatan</span>
+              <strong>Otomatis ke Buku Kas</strong>
+            </div>
+            <div className="mobile-data-row" style={{ marginTop: 10 }}>
+              <span>Saldo</span>
+              <strong><Wallet size={13} style={{ display: 'inline', marginRight: 4 }} /> Masuk</strong>
+            </div>
+          </div>
+        </aside>
+      </div>
     </div>
   );
 }

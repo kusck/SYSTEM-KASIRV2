@@ -31,7 +31,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: '#047857',
+  themeColor: '#0B3D2E',
 };
 
 export default function RootLayout({
@@ -43,11 +43,9 @@ export default function RootLayout({
     <html lang="id" className={jakarta.variable}>
       <body className="font-sans antialiased">
         <PwaRegister />
-        <NavbarClient />
-        {/* Single, consistent content wrapper — DO NOT add max-w / px inside children pages */}
-        <div className="app-shell mx-auto max-w-6xl px-4 sm:px-6 pb-16 pt-6">
+        <NavbarClient>
           {children}
-        </div>
+        </NavbarClient>
       </body>
     </html>
   );

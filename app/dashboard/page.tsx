@@ -3,194 +3,277 @@
 import { useEffect, useState } from 'react';
 import { rupiah } from '@/lib/format';
 import {
-  ArrowUpRight,
+  Activity,
   ArrowDownRight,
+  ArrowUpRight,
+  BarChart3,
+  Clock3,
+  Package,
+  ReceiptText,
+  ShoppingBag,
+  TrendingDown,
+  TrendingUp,
   Wallet,
-  Receipt,
-  Clock,
-  Calendar,
-  Sparkles,
 } from 'lucide-react';
 
 type Summary = {
   today: { income: number; expense: number; balance: number; transactions: number };
   month: { income: number; expense: number; balance: number; transactions: number };
-  recent: { id: string; type: 'INCOME' | 'EXPENSE'; category: string; description: string; amount: number; cashierName: string; createdAt: string }[];
+  recent: {
+    id: string;
+    type: 'INCOME' | 'EXPENSE';
+    category: string;
+    description: string;
+    amount: number;
+    cashierName: string;
+    createdAt: string;
+  }[];
 };
+
+function MiniChart() {
+  return (
+    <div className="mini-chart" aria-hidden="true">
+      <span />
+      <span />
+      <span />
+      <span />
+      <span />
+    </div>
+  );
+}
 
 export default function DashboardPage() {
   const [data, setData] = useState<Summary | null>(null);
 
   useEffect(() => {
-    fetch('/api/cashbook/summary').then((r) => r.json()).then(setData);
+    fetch('/api/cashbook/summary').then((res) => res.json()).then(setData);
   }, []);
 
   if (!data) {
     return (
-      <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', minHeight:360, gap:14 }}>
-        <div style={{
-          width:40, height:40, borderRadius:'50%',
-          border:'3.5px solid rgba(16,185,129,0.18)',
-          borderTopColor:'#10b981',
-          animation:'spin 0.75s linear infinite',
-        }} />
-        <p style={{ fontSize:13.5, color:'#94a3b8', fontWeight:500, margin:0 }}>Memuat laporan dashboard...</p>
+      <div className="page-stack">
+        <div className="page-header">
+          <div>
+            <span className="eyebrow"><Activity size={14} /> Dashboard</span>
+            <h1>Memuat performa kasir</h1>
+            <p>Data laporan real-time sedang disiapkan.</p>
+          </div>
+        </div>
+        <div className="stats-grid">
+          {Array.from({ length: 7 }).map((_, index) => (
+            <div className="stat-card" key={index}>
+              <div className="skeleton" style={{ width: 46, height: 46, borderRadius: 17 }} />
+              <div className="skeleton" style={{ width: '62%', height: 13, borderRadius: 999, marginTop: 18 }} />
+              <div className="skeleton" style={{ width: '80%', height: 30, borderRadius: 999, marginTop: 14 }} />
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
 
-  const todayCards = [
-    { label:'Pendapatan Hari Ini',  value:data.today.income,       icon:ArrowUpRight,   bg:'#ecfdf5', border:'#a7f3d0', iconColor:'#059669', valColor:'#047857',  isCurrency:true  },
-    { label:'Pengeluaran Hari Ini', value:data.today.expense,      icon:ArrowDownRight, bg:'#fef2f2', border:'#fecaca', iconColor:'#dc2626', valColor:'#b91c1c',  isCurrency:true  },
-    { label:'Saldo Hari Ini',       value:data.today.balance,      icon:Wallet,         bg:'#f0fdfa', border:'#99f6e4', iconColor:'#0d9488', valColor:'#0f766e',  isCurrency:true  },
-    { label:'Transaksi Kasir',      value:data.today.transactions, icon:Receipt,        bg:'#eef2ff', border:'#c7d2fe', iconColor:'#6366f1', valColor:'#4338ca',  isCurrency:false },
-  ];
-
-  const monthCards = [
-    { label:'Pendapatan Bulan Ini', value:data.month.income,   icon:ArrowUpRight,   bg:'#ecfdf5', border:'#a7f3d0', iconColor:'#059669', valColor:'#047857', isCurrency:true },
-    { label:'Pengeluaran Bulan Ini',value:data.month.expense,  icon:ArrowDownRight, bg:'#fef2f2', border:'#fecaca', iconColor:'#dc2626', valColor:'#b91c1c', isCurrency:true },
-    { label:'Saldo Bulan Ini',      value:data.month.balance,  icon:Wallet,         bg:'#f0fdfa', border:'#99f6e4', iconColor:'#0d9488', valColor:'#0f766e', isCurrency:true },
+  const stats = [
+    {
+      label: 'Total Penjualan',
+      value: rupiah(data.today.income),
+      helper: 'Hari ini',
+      icon: ShoppingBag,
+      trend: '+ realtime',
+      tone: 'up',
+    },
+    {
+      label: 'Total Pendapatan',
+      value: rupiah(data.month.income),
+      helper: 'Bulan berjalan',
+      icon: ArrowUpRight,
+      trend: '+ masuk',
+      tone: 'up',
+    },
+    {
+      label: 'Laba Bersih',
+      value: rupiah(data.month.balance),
+      helper: 'Pendapatan dikurangi pengeluaran',
+      icon: BarChart3,
+      trend: data.month.balance < 0 ? 'minus' : 'sehat',
+      tone: data.month.balance < 0 ? 'down' : 'up',
+    },
+    {
+      label: 'Pengeluaran',
+      value: rupiah(data.month.expense),
+      helper: 'Bulan berjalan',
+      icon: ArrowDownRight,
+      trend: 'kontrol',
+      tone: 'down',
+    },
+    {
+      label: 'Saldo Kas',
+      value: rupiah(data.today.balance),
+      helper: 'Saldo aktif hari ini',
+      icon: Wallet,
+      trend: data.today.balance < 0 ? 'perlu cek' : 'aman',
+      tone: data.today.balance < 0 ? 'down' : 'up',
+    },
+    {
+      label: 'Jumlah Produk',
+      value: '0 SKU',
+      helper: 'UI katalog siap diaktifkan',
+      icon: Package,
+      trend: 'frontend',
+      tone: 'neutral',
+    },
+    {
+      label: 'Transaksi Hari Ini',
+      value: `${data.today.transactions}`,
+      helper: 'Struk tercatat',
+      icon: ReceiptText,
+      trend: `${data.month.transactions} bulan ini`,
+      tone: 'neutral',
+    },
   ];
 
   return (
-    <div style={{ display:'flex', flexDirection:'column', gap:28 }}>
-
-      {/* ── Page header ── */}
-      <div>
-        <h1 style={{
-          margin:0, display:'flex', alignItems:'center', gap:10,
-          fontSize:26, fontWeight:800, letterSpacing:'-0.025em', color:'#0b1a13',
-        }}>
-          <Sparkles size={24} color="#10b981" style={{ flexShrink:0 }} />
-          Dashboard Laporan
-        </h1>
-        <p style={{ margin:'6px 0 0', fontSize:13.5, color:'#94a3b8' }}>
-          Laporan otomatis real-time dari sirkulasi kasir dan buku kas.
-        </p>
+    <div className="page-stack">
+      <div className="page-header">
+        <div>
+          <span className="eyebrow"><Activity size={14} /> Luxury Dashboard</span>
+          <h1>Ringkasan bisnis hari ini</h1>
+          <p>Monitor penjualan, pendapatan, saldo, dan aktivitas kasir dari satu layar.</p>
+        </div>
+        <a className="btn btn-primary btn-mobile-full" href="/kasir">
+          <ReceiptText size={17} />
+          Buka Kasir
+        </a>
       </div>
 
-      {/* ── Today ── */}
-      <section>
-        <div style={{ display:'flex', alignItems:'center', gap:7, marginBottom:14 }}>
-          <Calendar size={14} color="#94a3b8" />
-          <span style={{ fontSize:11, fontWeight:700, letterSpacing:'0.10em', textTransform:'uppercase', color:'#94a3b8' }}>
-            Ikhtisar Hari Ini
-          </span>
-        </div>
-        <div style={{ display:'grid', gap:14, gridTemplateColumns:'repeat(auto-fit,minmax(190px,1fr))' }}>
-          {todayCards.map((c) => {
-            const Icon = c.icon;
-            return (
-              <div key={c.label} className="card card-hover" style={{ padding:'18px 20px' }}>
-                <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', gap:8 }}>
-                  <p style={{ margin:0, fontSize:12, fontWeight:600, color:'#64748b', lineHeight:1.4 }}>{c.label}</p>
-                  <div style={{
-                    width:36, height:36, borderRadius:10, flexShrink:0,
-                    background:c.bg, border:`1px solid ${c.border}`,
-                    display:'flex', alignItems:'center', justifyContent:'center',
-                  }}>
-                    <Icon size={16} color={c.iconColor} />
-                  </div>
+      <section className="stats-grid" aria-label="Ringkasan dashboard">
+        {stats.map((card) => {
+          const Icon = card.icon;
+          const TrendIcon = card.tone === 'down' ? TrendingDown : TrendingUp;
+          return (
+            <article className="stat-card" key={card.label}>
+              <div className="stat-top">
+                <div>
+                  <p className="stat-label">{card.label}</p>
+                  <p className="stat-value">{card.value}</p>
                 </div>
-                <p style={{ margin:'12px 0 0', fontSize:22, fontWeight:800, letterSpacing:'-0.02em', color: c.value < 0 ? '#b91c1c' : c.valColor }}>
-                  {c.isCurrency ? rupiah(c.value) : `${c.value} Transaksi`}
-                </p>
+                <span className="stat-icon">
+                  <Icon size={22} />
+                </span>
               </div>
-            );
-          })}
-        </div>
+              <div className="stat-meta">
+                <span className={`trend ${card.tone === 'down' ? 'down' : card.tone === 'neutral' ? 'neutral' : ''}`}>
+                  <TrendIcon size={14} />
+                  {card.trend}
+                </span>
+                <MiniChart />
+              </div>
+              <p style={{ margin: '12px 0 0', color: '#6b7280', fontSize: 12, fontWeight: 750 }}>
+                {card.helper}
+              </p>
+            </article>
+          );
+        })}
       </section>
 
-      {/* ── Month ── */}
-      <section>
-        <div style={{ display:'flex', alignItems:'center', gap:7, marginBottom:14 }}>
-          <Calendar size={14} color="#94a3b8" />
-          <span style={{ fontSize:11, fontWeight:700, letterSpacing:'0.10em', textTransform:'uppercase', color:'#94a3b8' }}>
-            Ikhtisar Bulan Ini
-          </span>
-        </div>
-        <div style={{ display:'grid', gap:14, gridTemplateColumns:'repeat(auto-fit,minmax(220px,1fr))' }}>
-          {monthCards.map((c) => {
-            const Icon = c.icon;
-            return (
-              <div key={c.label} className="card card-hover" style={{ padding:'18px 20px' }}>
-                <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', gap:8 }}>
-                  <p style={{ margin:0, fontSize:12, fontWeight:600, color:'#64748b', lineHeight:1.4 }}>{c.label}</p>
-                  <div style={{
-                    width:36, height:36, borderRadius:10, flexShrink:0,
-                    background:c.bg, border:`1px solid ${c.border}`,
-                    display:'flex', alignItems:'center', justifyContent:'center',
-                  }}>
-                    <Icon size={16} color={c.iconColor} />
-                  </div>
-                </div>
-                <p style={{ margin:'12px 0 0', fontSize:22, fontWeight:800, letterSpacing:'-0.02em', color:c.valColor }}>
-                  {rupiah(c.value)}
-                </p>
-              </div>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* ── Recent Table ── */}
-      <section className="card" style={{ padding:'24px' }}>
-        <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:20 }}>
-          <div style={{
-            width:38, height:38, borderRadius:11,
-            background:'rgba(16,185,129,0.10)',
-            display:'flex', alignItems:'center', justifyContent:'center',
-          }}>
-            <Clock size={18} color="#059669" />
+      <section className="premium-panel" style={{ padding: 24 }}>
+        <div className="toolbar" style={{ marginBottom: 0 }}>
+          <div>
+            <span className="eyebrow" style={{ color: '#bbf7d0' }}>
+              <Wallet size={14} />
+              Saldo Operasional
+            </span>
+            <h2 style={{ margin: 0, fontSize: 28, fontWeight: 950, color: '#fff' }}>
+              {rupiah(data.today.balance)}
+            </h2>
+            <p style={{ margin: '8px 0 0', maxWidth: 560, color: 'rgba(255,255,255,0.68)', lineHeight: 1.65 }}>
+              Saldo dihitung dari pemasukan dan pengeluaran yang tercatat hari ini.
+            </p>
           </div>
-          <h2 style={{ margin:0, fontSize:18, fontWeight:700, color:'#0b1a13' }}>Riwayat Transaksi Terbaru</h2>
+          <div className="button-row">
+            <a className="btn btn-secondary" href="/buku-kas">Buku Kas</a>
+            <a className="btn btn-outline" href="/laporan" style={{ color: '#fff', borderColor: 'rgba(255,255,255,0.28)' }}>
+              Laporan
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <section className="section-card">
+        <div className="toolbar">
+          <div className="section-heading">
+            <span className="section-heading-icon"><Clock3 size={20} /></span>
+            <div className="section-title">
+              <h2>Riwayat Transaksi Terbaru</h2>
+              <p>Aktivitas kas masuk dan keluar paling baru.</p>
+            </div>
+          </div>
         </div>
 
         {data.recent.length === 0 ? (
-          <div style={{ textAlign:'center', padding:'36px 0' }}>
-            <p style={{ color:'#94a3b8', fontWeight:500, margin:0 }}>Belum ada riwayat transaksi saat ini.</p>
+          <div className="empty-state">
+            <ReceiptText size={34} />
+            <strong>Belum ada transaksi</strong>
+            <span>Transaksi kasir dan buku kas akan muncul di sini.</span>
           </div>
         ) : (
-          <div className="table-container">
-            <table className="table-custom" style={{ minWidth:640 }}>
-              <thead>
-                <tr>
-                  <th>Waktu</th>
-                  <th>Jenis</th>
-                  <th>Kategori</th>
-                  <th>Keterangan</th>
-                  <th>Kasir</th>
-                  <th style={{ textAlign:'right' }}>Nominal</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.recent.map((i) => (
-                  <tr key={i.id}>
-                    <td style={{ color:'#64748b', fontSize:12, fontWeight:500, whiteSpace:'nowrap' }}>
-                      {new Date(i.createdAt).toLocaleString('id-ID', { dateStyle:'medium', timeStyle:'short' })}
-                    </td>
-                    <td>
-                      <span className={i.type === 'INCOME' ? 'badge-income' : 'badge-expense'}>
-                        {i.type === 'INCOME'
-                          ? <><ArrowUpRight size={11} />Uang Masuk</>
-                          : <><ArrowDownRight size={11} />Uang Keluar</>}
-                      </span>
-                    </td>
-                    <td style={{ fontWeight:600, color:'#334155' }}>{i.category}</td>
-                    <td style={{ color:'#64748b', maxWidth:200, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
-                      {i.description || '-'}
-                    </td>
-                    <td style={{ color:'#64748b', fontSize:12, fontWeight:700, whiteSpace:'nowrap' }}>
-                      {i.cashierName || '-'}
-                    </td>
-                    <td style={{ textAlign:'right', fontWeight:700, whiteSpace:'nowrap', color: i.type === 'INCOME' ? '#059669' : '#dc2626' }}>
-                      {i.type === 'INCOME' ? '+' : '-'} {rupiah(i.amount)}
-                    </td>
+          <>
+            <div className="data-table-wrap desktop-table">
+              <table className="data-table" style={{ minWidth: 720 }}>
+                <thead>
+                  <tr>
+                    <th>Waktu</th>
+                    <th>Jenis</th>
+                    <th>Kategori</th>
+                    <th>Keterangan</th>
+                    <th>Kasir</th>
+                    <th style={{ textAlign: 'right' }}>Nominal</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {data.recent.map((item) => (
+                    <tr key={item.id}>
+                      <td style={{ color: '#6b7280', fontWeight: 750, whiteSpace: 'nowrap' }}>
+                        {new Date(item.createdAt).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })}
+                      </td>
+                      <td>
+                        <span className={`badge ${item.type === 'INCOME' ? 'badge-income' : 'badge-expense'}`}>
+                          {item.type === 'INCOME' ? <ArrowUpRight size={13} /> : <ArrowDownRight size={13} />}
+                          {item.type === 'INCOME' ? 'Uang Masuk' : 'Uang Keluar'}
+                        </span>
+                      </td>
+                      <td style={{ fontWeight: 850 }}>{item.category}</td>
+                      <td style={{ color: '#6b7280', maxWidth: 240, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {item.description || '-'}
+                      </td>
+                      <td style={{ color: '#6b7280', fontWeight: 750, whiteSpace: 'nowrap' }}>{item.cashierName || '-'}</td>
+                      <td style={{ textAlign: 'right', fontWeight: 900, whiteSpace: 'nowrap', color: item.type === 'INCOME' ? '#047857' : '#dc2626' }}>
+                        {item.type === 'INCOME' ? '+' : '-'} {rupiah(item.amount)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="mobile-card-list">
+              {data.recent.map((item) => (
+                <article className="mobile-data-card" key={item.id}>
+                  <div className="mobile-data-row">
+                    <span>Jenis</span>
+                    <strong>
+                      <span className={`badge ${item.type === 'INCOME' ? 'badge-income' : 'badge-expense'}`}>
+                        {item.type === 'INCOME' ? 'Uang Masuk' : 'Uang Keluar'}
+                      </span>
+                    </strong>
+                  </div>
+                  <div className="mobile-data-row"><span>Nominal</span><strong>{item.type === 'INCOME' ? '+' : '-'} {rupiah(item.amount)}</strong></div>
+                  <div className="mobile-data-row"><span>Kategori</span><strong>{item.category}</strong></div>
+                  <div className="mobile-data-row"><span>Keterangan</span><strong>{item.description || '-'}</strong></div>
+                  <div className="mobile-data-row"><span>Waktu</span><strong>{new Date(item.createdAt).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })}</strong></div>
+                </article>
+              ))}
+            </div>
+          </>
         )}
       </section>
     </div>

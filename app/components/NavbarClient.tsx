@@ -2,29 +2,99 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState, useEffect } from 'react';
-import { LayoutDashboard, Receipt, BookOpen, Menu, X, Zap, History, LogOut } from 'lucide-react';
+import type { ReactNode } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import {
+  ArrowDownToLine,
+  ArrowUpFromLine,
+  BarChart3,
+  Bell,
+  BookOpenText,
+  Boxes,
+  CalendarDays,
+  ChevronDown,
+  CircleDollarSign,
+  LayoutDashboard,
+  LogOut,
+  Menu,
+  Package,
+  PanelLeftClose,
+  PanelLeftOpen,
+  ReceiptText,
+  Search,
+  Settings,
+  UserRound,
+  Users,
+  X,
+} from 'lucide-react';
 
 const links = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/kasir',     label: 'Kasir',     icon: Receipt },
-  { href: '/buku-kas',  label: 'Buku Kas',  icon: BookOpen },
-  { href: '/riwayat-buku-kas-harian', label: 'Riwayat Harian', icon: History },
+  { href: '/kasir', label: 'Kasir', icon: ReceiptText },
+  { href: '/produk', label: 'Produk', icon: Package },
+  { href: '/stok', label: 'Stok', icon: Boxes },
+  { href: '/buku-kas', label: 'Buku Kas', icon: BookOpenText },
+  { href: '/laporan', label: 'Laporan', icon: BarChart3, aliases: ['/riwayat-buku-kas-harian'] },
+  { href: '/pemasukan', label: 'Pemasukan', icon: ArrowDownToLine },
+  { href: '/pengeluaran', label: 'Pengeluaran', icon: ArrowUpFromLine },
+  { href: '/pengguna', label: 'Pengguna', icon: Users },
+  { href: '/pengaturan', label: 'Pengaturan', icon: Settings },
 ];
 
-export default function NavbarClient() {
-  const pathname   = usePathname();
-  const [open,     setOpen]     = useState(false);
-  const [scrolled, setScrolled] = useState(false);
+const titles: Record<string, string> = {
+  '/': 'Beranda',
+  '/dashboard': 'Dashboard',
+  '/kasir': 'Kasir',
+  '/produk': 'Produk',
+  '/stok': 'Stok',
+  '/buku-kas': 'Buku Kas',
+  '/laporan': 'Laporan',
+  '/riwayat-buku-kas-harian': 'Laporan',
+  '/pemasukan': 'Pemasukan',
+  '/pengeluaran': 'Pengeluaran',
+  '/pengguna': 'Pengguna',
+  '/pengaturan': 'Pengaturan',
+};
+
+function getTitle(pathname: string) {
+  return titles[pathname] || 'PASUNDAN POS';
+}
+
+function Brand({ collapsed = false }: { collapsed?: boolean }) {
+  return (
+    <Link href="/dashboard" className="brand" aria-label="PASUNDAN POS Dashboard">
+      <span className="brand-mark">
+        <CircleDollarSign size={22} strokeWidth={2.4} />
+      </span>
+      {!collapsed && (
+        <span className="brand-copy">
+          <strong>PASUNDAN POS</strong>
+          <small>Premium Retail Suite</small>
+        </span>
+      )}
+    </Link>
+  );
+}
+
+export default function NavbarClient({ children }: { children: ReactNode }) {
+  const pathname = usePathname();
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [now, setNow] = useState<Date | null>(null);
 
   const isLogin = pathname === '/login';
-
-  useEffect(() => { setOpen(false); }, [pathname]);
+  const pageTitle = useMemo(() => getTitle(pathname), [pathname]);
 
   useEffect(() => {
-    const fn = () => setScrolled(window.scrollY > 6);
-    window.addEventListener('scroll', fn, { passive: true });
-    return () => window.removeEventListener('scroll', fn);
+    setDrawerOpen(false);
+    setProfileOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    setNow(new Date());
+    const timer = window.setInterval(() => setNow(new Date()), 1000);
+    return () => window.clearInterval(timer);
   }, []);
 
   async function logout() {
@@ -32,220 +102,172 @@ export default function NavbarClient() {
     window.location.href = '/login';
   }
 
-  if (isLogin) return null;
+  if (isLogin) return <>{children}</>;
+
+  const nav = (
+    <nav className="sidebar-nav" aria-label="Navigasi utama">
+      {links.map(({ href, label, icon: Icon, aliases }) => {
+        const active = pathname === href || aliases?.includes(pathname);
+        return (
+          <Link
+            key={href}
+            href={href}
+            className={`sidebar-link ${active ? 'is-active' : ''}`}
+            title={collapsed ? label : undefined}
+          >
+            <Icon size={19} />
+            <span>{label}</span>
+          </Link>
+        );
+      })}
+    </nav>
+  );
 
   return (
-    <header
-      style={{
-        position: 'sticky',
-        top: 0,
-        zIndex: 50,
-        background: scrolled
-          ? 'rgba(255,255,255,0.92)'
-          : 'rgba(255,255,255,0.75)',
-        backdropFilter: 'blur(16px)',
-        WebkitBackdropFilter: 'blur(16px)',
-        borderBottom: '1px solid rgba(16,185,129,0.10)',
-        boxShadow: scrolled ? '0 2px 20px rgba(11,26,19,0.06)' : 'none',
-        transition: 'background 0.25s ease, box-shadow 0.25s ease',
-      }}
-    >
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-4 sm:px-6 h-16">
-
-        {/* ── Logo ── */}
-        <Link
-          href="/"
-          className="flex items-center no-underline group"
-          style={{ columnGap: 12 }}
-        >
-          <span
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: 42,
-              height: 42,
-              borderRadius: 12,
-              background: 'linear-gradient(135deg,#10b981,#0d9488)',
-              color: '#fff',
-              boxShadow: '0 4px 14px rgba(16,185,129,0.35)',
-              transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-            }}
-            className="group-hover:scale-105"
-          >
-            <Zap size={20} strokeWidth={2.5} />
-          </span>
-          <span
-            style={{
-              fontWeight: 800,
-              fontSize: 18,
-              letterSpacing: '-0.02em',
-              background: 'linear-gradient(90deg,#065f46,#0d9488)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
-            }}
-          >
-            PASUNDAN POS
-          </span>
-        </Link>
-
-        {/* ── Desktop nav pill ── */}
-        <nav
-          className="hidden lg:flex items-center gap-0.5"
-          style={{
-            background: 'rgba(241,245,249,0.85)',
-            border: '1px solid rgba(203,213,225,0.6)',
-            borderRadius: 16,
-            padding: '5px',
-          }}
-        >
-          {links.map(({ href, label, icon: Icon }) => {
-            const active = pathname === href;
-            return (
-              <Link
-                key={href}
-                href={href}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  padding: '9px 18px',
-                  borderRadius: 12,
-                  fontSize: 14.5,
-                  fontWeight: 600,
-                  textDecoration: 'none',
-                  transition: 'all 0.18s ease',
-                  background: active ? '#ffffff' : 'transparent',
-                  color: active ? '#047857' : '#64748b',
-                  boxShadow: active ? '0 1px 8px rgba(0,0,0,0.08)' : 'none',
-                  border: active ? '1px solid rgba(16,185,129,0.12)' : '1px solid transparent',
-                }}
-              >
-                <Icon size={17} style={{ color: active ? '#10b981' : '#94a3b8', flexShrink: 0 }} />
-                {label}
-              </Link>
-            );
-          })}
+    <div className={`pos-shell ${collapsed ? 'is-collapsed' : ''}`}>
+      <aside className="pos-sidebar" aria-label="Sidebar desktop">
+        <div className="sidebar-top">
+          <Brand collapsed={collapsed} />
           <button
-            onClick={logout}
-            title="Logout"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: 38,
-              height: 38,
-              borderRadius: 12,
-              border: '1px solid transparent',
-              background: 'transparent',
-              color: '#94a3b8',
-              cursor: 'pointer',
-              marginLeft: 2,
-            }}
+            type="button"
+            className="sidebar-collapse"
+            onClick={() => setCollapsed((value) => !value)}
+            aria-label={collapsed ? 'Perbesar sidebar' : 'Perkecil sidebar'}
           >
-            <LogOut size={16} />
-          </button>
-        </nav>
-
-        {/* ── Mobile hamburger ── */}
-        <button
-          onClick={() => setOpen(!open)}
-          className="lg:hidden"
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: 42,
-            height: 42,
-            borderRadius: 11,
-            background: 'rgba(16,185,129,0.07)',
-            border: '1px solid rgba(16,185,129,0.14)',
-            color: '#047857',
-            cursor: 'pointer',
-            transition: 'background 0.15s ease',
-        }}
-        aria-label="Toggle menu"
-      >
-          {open ? <X size={21} /> : <Menu size={21} />}
-        </button>
-      </div>
-
-      {/* ── Mobile drawer ── */}
-      <div
-        style={{
-          overflow: 'hidden',
-          maxHeight: open ? 320 : 0,
-          opacity: open ? 1 : 0,
-          transition: 'max-height 0.3s ease, opacity 0.25s ease',
-          borderTop: open ? '1px solid rgba(16,185,129,0.08)' : 'none',
-          background: 'rgba(255,255,255,0.97)',
-        }}
-        className="lg:hidden"
-      >
-        <div style={{ padding: '10px 16px 14px' }}>
-          {links.map(({ href, label, icon: Icon }) => {
-            const active = pathname === href;
-            return (
-              <Link
-                key={href}
-                href={href}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 10,
-                  padding: '10px 14px',
-                  borderRadius: 11,
-                  fontSize: 14,
-                  fontWeight: 600,
-                  textDecoration: 'none',
-                  marginBottom: 4,
-                  color: active ? '#047857' : '#475569',
-                  background: active ? 'rgba(16,185,129,0.07)' : 'transparent',
-                  border: active ? '1px solid rgba(16,185,129,0.12)' : '1px solid transparent',
-                  transition: 'all 0.15s ease',
-                }}
-              >
-                <Icon size={16} style={{ color: active ? '#10b981' : '#94a3b8', flexShrink: 0 }} />
-                {label}
-                {active && (
-                  <span
-                    style={{
-                      marginLeft: 'auto',
-                      width: 6,
-                      height: 6,
-                      borderRadius: '50%',
-                      background: '#10b981',
-                      flexShrink: 0,
-                    }}
-                  />
-                )}
-              </Link>
-            );
-          })}
-          <button
-            onClick={logout}
-            style={{
-              width: '100%',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 10,
-              padding: '10px 14px',
-              borderRadius: 11,
-              fontSize: 14,
-              fontWeight: 600,
-              color: '#b91c1c',
-              background: '#fef2f2',
-              border: '1px solid #fecaca',
-              cursor: 'pointer',
-              marginTop: 4,
-            }}
-          >
-            <LogOut size={16} />
-            Logout
+            {collapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
           </button>
         </div>
+
+        {nav}
+
+        <div className="sidebar-footer">
+          {!collapsed && (
+            <div>
+              <span>Mode SaaS</span>
+              <strong>Aktif</strong>
+            </div>
+          )}
+          <button type="button" className="sidebar-logout" onClick={logout} aria-label="Logout">
+            <LogOut size={18} />
+            {!collapsed && <span>Logout</span>}
+          </button>
+        </div>
+      </aside>
+
+      <div className="pos-main">
+        <header className="topbar">
+          <div className="topbar-left">
+            <button
+              type="button"
+              className="mobile-menu-button"
+              onClick={() => setDrawerOpen(true)}
+              aria-label="Buka menu"
+            >
+              <Menu size={22} />
+            </button>
+            <div>
+              <p className="page-kicker">PASUNDAN POS</p>
+              <h1>{pageTitle}</h1>
+            </div>
+          </div>
+
+          <div className="topbar-search" role="search">
+            <Search size={17} />
+            <input aria-label="Cari di aplikasi" placeholder="Cari transaksi, produk, laporan..." />
+          </div>
+
+          <div className="topbar-actions">
+            <div className="clock-pill" aria-label="Jam dan tanggal">
+              <ClockDisplay now={now} />
+            </div>
+
+            <button type="button" className="topbar-icon" aria-label="Notifikasi">
+              <Bell size={18} />
+              <span aria-hidden="true" />
+            </button>
+
+            <div className="profile-menu">
+              <button
+                type="button"
+                className="profile-button"
+                onClick={() => setProfileOpen((value) => !value)}
+                aria-expanded={profileOpen}
+                aria-haspopup="menu"
+              >
+                <span className="avatar"><UserRound size={17} /></span>
+                <span className="profile-copy">
+                  <strong>Admin</strong>
+                  <small>Owner</small>
+                </span>
+                <ChevronDown size={16} />
+              </button>
+
+              {profileOpen && (
+                <div className="profile-dropdown" role="menu">
+                  <div className="mobile-clock">
+                    <ClockDisplay now={now} />
+                  </div>
+                  <Link href="/pengaturan" role="menuitem">Pengaturan Akun</Link>
+                  <button type="button" onClick={logout} role="menuitem">
+                    <LogOut size={15} />
+                    Logout
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </header>
+
+        <main className="app-content">{children}</main>
       </div>
-    </header>
+
+      <div className={`drawer-overlay ${drawerOpen ? 'is-open' : ''}`} onClick={() => setDrawerOpen(false)} />
+      <aside className={`mobile-drawer ${drawerOpen ? 'is-open' : ''}`} aria-label="Menu mobile" aria-hidden={!drawerOpen}>
+        <div className="mobile-drawer-head">
+          <Brand />
+          <button type="button" className="topbar-icon" onClick={() => setDrawerOpen(false)} aria-label="Tutup menu">
+            <X size={20} />
+          </button>
+        </div>
+        <nav className="mobile-nav" aria-label="Navigasi mobile">
+          {links.map(({ href, label, icon: Icon, aliases }) => {
+            const active = pathname === href || aliases?.includes(pathname);
+            return (
+              <Link key={href} href={href} className={`mobile-nav-link ${active ? 'is-active' : ''}`}>
+                <Icon size={19} />
+                <span>{label}</span>
+              </Link>
+            );
+          })}
+        </nav>
+        <button type="button" className="mobile-logout" onClick={logout}>
+          <LogOut size={18} />
+          Logout
+        </button>
+      </aside>
+    </div>
+  );
+}
+
+function ClockDisplay({ now }: { now: Date | null }) {
+  if (!now) {
+    return (
+      <>
+        <CalendarDays size={16} />
+        <span>Memuat waktu</span>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <CalendarDays size={16} />
+      <span>
+        {now.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}
+      </span>
+      <strong>
+        {now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
+      </strong>
+    </>
   );
 }

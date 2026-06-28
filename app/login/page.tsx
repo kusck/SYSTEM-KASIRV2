@@ -2,7 +2,7 @@
 
 import { FormEvent, Suspense, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { LockKeyhole, LogIn, ShieldCheck, Zap } from 'lucide-react';
+import { CircleDollarSign, LockKeyhole, LogIn, ReceiptText, ShieldCheck, Sparkles } from 'lucide-react';
 
 function LoginForm() {
   const router = useRouter();
@@ -11,8 +11,8 @@ function LoginForm() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
 
-  async function submit(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
     setMessage('');
     setLoading(true);
 
@@ -37,38 +37,86 @@ function LoginForm() {
 
   return (
     <main className="login-shell">
-      <section className="login-panel card">
-        <div className="login-brand">
-          <span className="login-logo"><Zap size={22} /></span>
-          <div>
-            <p>PASUNDAN POS</p>
-            <h1>Masuk Aplikasi</h1>
-          </div>
+      <section className="login-visual">
+        <div>
+          <span className="brand">
+            <span className="brand-mark"><CircleDollarSign size={22} /></span>
+            <span className="brand-copy">
+              <strong>PASUNDAN POS</strong>
+              <small>Premium Retail Suite</small>
+            </span>
+          </span>
+          <h1>Kasir modern untuk operasional yang lebih rapi.</h1>
+          <p>
+            Dashboard POS beridentitas dark forest green, dibuat untuk transaksi cepat,
+            pembukuan kas harian, dan monitoring usaha dari desktop sampai smartphone.
+          </p>
         </div>
 
-        <form onSubmit={submit} className="login-form">
-          <label>
-            <span>Password</span>
-            <div className="login-input-wrap">
-              <LockKeyhole size={17} />
-              <input
-                className="input"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Masukkan password"
-                autoFocus
-                required
-              />
+        <div className="login-device" aria-hidden="true">
+          <div className="login-device-screen">
+            {[0, 1, 2].map((item) => (
+              <div className="login-device-row" key={item}>
+                <span className="login-device-icon" />
+                <span className="login-device-line" />
+                <span className="login-device-price" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="login-panel-wrap">
+        <div className="login-panel glass">
+          <div className="login-brand">
+            <span className="login-logo"><CircleDollarSign size={24} /></span>
+            <div>
+              <p>Welcome Back</p>
+              <h1>Masuk Aplikasi</h1>
             </div>
-          </label>
+          </div>
 
-          <button className="btn btn-primary" disabled={loading || !password}>
-            {loading ? 'Memeriksa...' : <><LogIn size={16} /> Login Sekali</>}
-          </button>
-        </form>
+          <form onSubmit={submit} className="login-form">
+            <label className="field">
+              <span className="field-label"><LockKeyhole size={14} /> Password</span>
+              <div className="input-shell">
+                <span className="input-icon"><LockKeyhole size={17} /></span>
+                <input
+                  className="input"
+                  type="password"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  placeholder="Masukkan password"
+                  autoFocus
+                  required
+                />
+              </div>
+            </label>
 
-        {message && <div className="login-alert"><ShieldCheck size={16} />{message}</div>}
+            <button className="btn btn-primary" disabled={loading || !password}>
+              {loading ? <span className="button-spinner spinner" /> : <LogIn size={17} />}
+              {loading ? 'Memeriksa...' : 'Login Sekarang'}
+            </button>
+          </form>
+
+          {message && (
+            <div className="toast error" style={{ marginTop: 14 }}>
+              <ShieldCheck size={17} />
+              {message}
+            </div>
+          )}
+
+          <div className="surface-card" style={{ marginTop: 18, padding: 14, boxShadow: 'none' }}>
+            <div className="mobile-data-row">
+              <span><Sparkles size={13} style={{ display: 'inline', marginRight: 5 }} /> Mode</span>
+              <strong>Secure POS</strong>
+            </div>
+            <div className="mobile-data-row" style={{ marginTop: 10 }}>
+              <span><ReceiptText size={13} style={{ display: 'inline', marginRight: 5 }} /> Akses</span>
+              <strong>Kasir dan Buku Kas</strong>
+            </div>
+          </div>
+        </div>
       </section>
     </main>
   );
