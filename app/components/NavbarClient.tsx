@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { useEffect, useMemo, useState } from 'react';
+import { formatDate, formatTime } from '@/lib/format';
 import {
   ArrowDownToLine,
   ArrowUpFromLine,
@@ -98,8 +99,13 @@ export default function NavbarClient({ children }: { children: ReactNode }) {
   }, []);
 
   async function logout() {
-    await fetch('/api/auth/logout', { method: 'POST' });
-    window.location.href = '/login';
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+    } catch (error) {
+      console.warn('[PASUNDAN POS] Logout request failed:', error);
+    } finally {
+      window.location.href = '/login';
+    }
   }
 
   if (isLogin) return <>{children}</>;
@@ -262,12 +268,8 @@ function ClockDisplay({ now }: { now: Date | null }) {
   return (
     <>
       <CalendarDays size={16} />
-      <span>
-        {now.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}
-      </span>
-      <strong>
-        {now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
-      </strong>
+      <span>{formatDate(now)}</span>
+      <strong>{formatTime(now)}</strong>
     </>
   );
 }

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { rupiah } from '@/lib/format';
+import { formatDateTime, formatInputNumber, getErrorMessage, readJsonResponse, rupiah } from '@/lib/format';
 import {
   AlertCircle,
   ArrowDownRight,
@@ -30,11 +30,6 @@ function onlyDigits(value: string) {
   return value.replace(/\D/g, '');
 }
 
-function formatInputNumber(value: string) {
-  if (!value) return '';
-  return Number(value).toLocaleString('id-ID');
-}
-
 export default function BukuKasPage() {
   const [items, setItems] = useState<Item[]>([]);
   const [type, setType] = useState<'INCOME' | 'EXPENSE'>('INCOME');
@@ -45,13 +40,24 @@ export default function BukuKasPage() {
   const [filterType, setFilterType] = useState<'ALL' | 'INCOME' | 'EXPENSE'>('ALL');
   const [filterDate, setFilterDate] = useState('');
   const [msg, setMsg] = useState('');
+  const [loading, setLoading] = useState(true);
 
   async function load() {
-    const res = await fetch(`/api/cashbook?q=${encodeURIComponent(q)}`);
-    setItems(await res.json());
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/cashbook?q=${encodeURIComponent(q)}`);
+      const data = await readJsonResponse<Item[]>(res);
+      if (!res.ok) throw new Error('Gagal memuat buku kas');
+      setItems(Array.isArray(data) ? data : []);
+    } catch (error) {
+      setItems([]);
+      setMsg(`Error: ${getErrorMessage(error, 'Gagal memuat buku kas')}`);
+    } finally {
+      setLoading(false);
+    }
   }
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { void load(); }, []);
 
   const summary = useMemo(() => {
     const income = items.filter((item) => item.type === 'INCOME').reduce((acc, item) => acc + item.amount, 0);
@@ -72,18 +78,22 @@ export default function BukuKasPage() {
     if (!amount || Number(amount) <= 0) { setMsg('Error: Masukkan nominal yang valid'); return; }
     if (!category) { setMsg('Error: Pilih kategori transaksi'); return; }
 
-    const res = await fetch('/api/cashbook', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ type, amount: Number(amount), category, description, cashierName: 'Admin' }),
-    });
-    const data = await res.json();
-    if (!res.ok) { setMsg(data.message || 'Gagal menyimpan'); return; }
-    setAmount('');
-    setCategory('');
-    setDescription('');
-    setMsg('Berhasil disimpan ke Buku Kas');
-    load();
+    try {
+      const res = await fetch('/api/cashbook', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type, amount: Number(amount), category, description, cashierName: 'Admin' }),
+      });
+      const data = await readJsonResponse<{ message?: string }>(res);
+      if (!res.ok) { setMsg(data?.message || 'Gagal menyimpan'); return; }
+      setAmount('');
+      setCategory('');
+      setDescription('');
+      setMsg('Berhasil disimpan ke Buku Kas');
+      await load();
+    } catch (error) {
+      setMsg(`Error: ${getErrorMessage(error, 'Gagal menyimpan')}`);
+    }
   }
 
   const categories =
@@ -264,7 +274,12 @@ export default function BukuKasPage() {
             ))}
           </div>
 
-          {displayedItems.length === 0 ? (
+          {loading ? (
+            <div className="loading-state">
+              <span className="spinner" />
+              <strong>Memuat buku kas</strong>
+            </div>
+          ) : displayedItems.length === 0 ? (
             <div className="empty-state">
               <FileText size={34} />
               <strong>Tidak ada data</strong>
@@ -288,7 +303,7 @@ export default function BukuKasPage() {
                     {displayedItems.map((item) => (
                       <tr key={item.id}>
                         <td style={{ color: '#6b7280', fontWeight: 750, whiteSpace: 'nowrap' }}>
-                          {new Date(item.createdAt).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })}
+                          {formatDateTime(item.createdAt)}
                         </td>
                         <td>
                           <span className={`badge ${item.type === 'INCOME' ? 'badge-income' : 'badge-expense'}`}>
@@ -328,7 +343,7 @@ export default function BukuKasPage() {
                     <div className="mobile-data-row"><span>Nominal</span><strong>{item.type === 'INCOME' ? '+' : '-'} {rupiah(item.amount)}</strong></div>
                     <div className="mobile-data-row"><span>Kategori</span><strong>{item.category}</strong></div>
                     <div className="mobile-data-row"><span>Keterangan</span><strong>{item.description || '-'}</strong></div>
-                    <div className="mobile-data-row"><span>Tanggal</span><strong>{new Date(item.createdAt).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })}</strong></div>
+                    <div className="mobile-data-row"><span>Tanggal</span><strong>{formatDateTime(item.createdAt)}</strong></div>
                   </article>
                 ))}
               </div>

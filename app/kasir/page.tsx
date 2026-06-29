@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { rupiah } from '@/lib/format';
+import { formatInputNumber, getErrorMessage, readJsonResponse, rupiah } from '@/lib/format';
 import {
   AlertTriangle,
   Banknote,
@@ -22,11 +22,6 @@ const quickAmounts = [50000, 100000, 150000, 200000];
 
 function onlyDigits(value: string) {
   return value.replace(/\D/g, '');
-}
-
-function formatInputNumber(value: string) {
-  if (!value) return '';
-  return Number(value).toLocaleString('id-ID');
 }
 
 export default function KasirPage() {
@@ -56,13 +51,13 @@ export default function KasirPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ total: totalNumber, paidAmount: paidNumber, cashierName: cashier }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Gagal menyimpan transaksi');
+      const data = await readJsonResponse<{ message?: string }>(res);
+      if (!res.ok) throw new Error(data?.message || 'Gagal menyimpan transaksi');
       setMessage('Pembayaran berhasil. Transaksi otomatis masuk ke Buku Kas sebagai Uang Masuk.');
       setTotal('');
       setPaid('');
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'Terjadi error');
+      setMessage(getErrorMessage(error, 'Terjadi error'));
     } finally {
       setLoading(false);
     }

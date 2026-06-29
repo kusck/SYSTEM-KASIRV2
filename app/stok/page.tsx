@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { rupiah } from '@/lib/format';
+import { formatInputNumber, getErrorMessage, readJsonResponse, rupiah } from '@/lib/format';
 import {
   AlertCircle,
   AlertTriangle,
@@ -66,11 +66,6 @@ function onlyDigits(value: string) {
   return value.replace(/\D/g, '');
 }
 
-function formatInputNumber(value: string) {
-  if (!value) return '';
-  return Number(value).toLocaleString('id-ID');
-}
-
 function statusBadge(status: ProductStock['stockStatus']) {
   if (status === 'out') return { className: 'badge-expense', label: 'Habis' };
   if (status === 'low') return { className: 'badge-warning', label: 'Stok Rendah' };
@@ -98,17 +93,25 @@ export default function StokPage() {
 
   async function load() {
     setLoading(true);
-    const params = new URLSearchParams();
-    if (q.trim()) params.set('q', q.trim());
-    if (status !== 'all') params.set('status', status);
-    const res = await fetch(`/api/stock?${params.toString()}`);
-    const data = await res.json() as StockResponse;
-    setProducts(Array.isArray(data.products) ? data.products : []);
-    setSummary(data.summary || emptySummary);
-    setLoading(false);
+    try {
+      const params = new URLSearchParams();
+      if (q.trim()) params.set('q', q.trim());
+      if (status !== 'all') params.set('status', status);
+      const res = await fetch(`/api/stock?${params.toString()}`);
+      const data = await readJsonResponse<StockResponse>(res);
+      if (!res.ok || !data) throw new Error('Gagal memuat stok');
+      setProducts(Array.isArray(data.products) ? data.products : []);
+      setSummary(data.summary || emptySummary);
+    } catch (error) {
+      setProducts([]);
+      setSummary(emptySummary);
+      setMessage(getErrorMessage(error, 'Gagal memuat stok'));
+    } finally {
+      setLoading(false);
+    }
   }
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { void load(); }, []);
 
   const selectedProduct = useMemo(() => {
     return products.find((product) => product.id === productId) || null;
@@ -130,8 +133,8 @@ export default function StokPage() {
           actorName: 'Admin',
         }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Gagal menyimpan stok');
+      const data = await readJsonResponse<{ message?: string }>(res);
+      if (!res.ok) throw new Error(data?.message || 'Gagal menyimpan stok');
 
       setMessage('Mutasi stok berhasil disimpan');
       setQuantity('');

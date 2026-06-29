@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { rupiah } from '@/lib/format';
+import { formatInputNumber, getErrorMessage, readJsonResponse, rupiah } from '@/lib/format';
 import {
   AlertCircle,
   CheckCircle2,
@@ -59,11 +59,6 @@ function onlyDigits(value: string) {
   return value.replace(/\D/g, '');
 }
 
-function formatInputNumber(value: string) {
-  if (!value) return '';
-  return Number(value).toLocaleString('id-ID');
-}
-
 function stockBadge(product: Product) {
   if (product.stock <= 0) return { className: 'badge-expense', label: 'Habis' };
   if (product.stock <= product.minStock) return { className: 'badge-warning', label: 'Stok Rendah' };
@@ -82,16 +77,23 @@ export default function ProdukPage() {
 
   async function load() {
     setLoading(true);
-    const params = new URLSearchParams();
-    if (q.trim()) params.set('q', q.trim());
-    if (status !== 'all') params.set('status', status);
-    const res = await fetch(`/api/products?${params.toString()}`);
-    const data = await res.json();
-    setProducts(Array.isArray(data) ? data : []);
-    setLoading(false);
+    try {
+      const params = new URLSearchParams();
+      if (q.trim()) params.set('q', q.trim());
+      if (status !== 'all') params.set('status', status);
+      const res = await fetch(`/api/products?${params.toString()}`);
+      const data = await readJsonResponse<Product[]>(res);
+      if (!res.ok) throw new Error('Gagal memuat produk');
+      setProducts(Array.isArray(data) ? data : []);
+    } catch (error) {
+      setProducts([]);
+      setMessage(getErrorMessage(error, 'Gagal memuat produk'));
+    } finally {
+      setLoading(false);
+    }
   }
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { void load(); }, []);
 
   const categories = useMemo(() => {
     return Array.from(new Set(products.map((product) => product.category).filter(Boolean))).slice(0, 8);
@@ -141,8 +143,8 @@ export default function ProdukPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Gagal menyimpan produk');
+      const data = await readJsonResponse<{ message?: string }>(res);
+      if (!res.ok) throw new Error(data?.message || 'Gagal menyimpan produk');
 
       setMessage(editing ? 'Produk berhasil diperbarui' : 'Produk berhasil ditambahkan');
       if (!editing) setForm(emptyForm);
@@ -159,15 +161,19 @@ export default function ProdukPage() {
     if (!ok) return;
 
     setMessage('');
-    const res = await fetch(`/api/products/${product.id}`, { method: 'DELETE' });
-    const data = await res.json();
-    if (!res.ok) {
-      setMessage(data.message || 'Gagal menghapus produk');
-      return;
+    try {
+      const res = await fetch(`/api/products/${product.id}`, { method: 'DELETE' });
+      const data = await readJsonResponse<{ message?: string }>(res);
+      if (!res.ok) {
+        setMessage(data?.message || 'Gagal menghapus produk');
+        return;
+      }
+      if (editing?.id === product.id) startCreate();
+      setMessage('Produk berhasil dihapus');
+      await load();
+    } catch (error) {
+      setMessage(getErrorMessage(error, 'Gagal menghapus produk'));
     }
-    if (editing?.id === product.id) startCreate();
-    setMessage('Produk berhasil dihapus');
-    await load();
   }
 
   const isSuccess = message.toLowerCase().includes('berhasil');
@@ -339,7 +345,16 @@ export default function ProdukPage() {
                     <div className="product-image">
                       {product.imageUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={product.imageUrl} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        <img
+                          src={product.imageUrl}
+                          alt={product.name}
+                          loading="lazy"
+                          decoding="async"
+                          onError={(event) => {
+                            event.currentTarget.style.display = 'none';
+                          }}
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        />
                       ) : (
                         <Package size={46} />
                       )}

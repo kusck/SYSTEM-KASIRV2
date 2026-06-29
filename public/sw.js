@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pasundan-pos-v1';
+const CACHE_NAME = 'pasundan-pos-v2-android9';
 const STATIC_CACHE_URLS = [
   '/',
   '/dashboard',
@@ -13,7 +13,15 @@ const STATIC_CACHE_URLS = [
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_CACHE_URLS))
+    caches.open(CACHE_NAME).then((cache) =>
+      Promise.all(
+        STATIC_CACHE_URLS.map((url) =>
+          cache.add(url).catch((error) => {
+            console.warn('[PASUNDAN POS SW] Precache skipped:', url, error);
+          })
+        )
+      )
+    )
   );
   self.skipWaiting();
 });
@@ -63,8 +71,10 @@ async function cacheFirst(request) {
   if (cached) return cached;
 
   const response = await fetch(request);
-  const cache = await caches.open(CACHE_NAME);
-  cache.put(request, response.clone());
+  if (response && response.ok) {
+    const cache = await caches.open(CACHE_NAME);
+    cache.put(request, response.clone());
+  }
   return response;
 }
 
@@ -73,7 +83,9 @@ async function networkFirstPage(request) {
 
   try {
     const response = await fetch(request);
-    cache.put(request, response.clone());
+    if (response && response.ok) {
+      cache.put(request, response.clone());
+    }
     return response;
   } catch {
     return (await caches.match(request)) || (await caches.match('/offline.html'));
@@ -86,7 +98,9 @@ async function staleWhileRevalidate(request) {
 
   const fetchPromise = fetch(request)
     .then((response) => {
-      cache.put(request, response.clone());
+      if (response && response.ok) {
+        cache.put(request, response.clone());
+      }
       return response;
     })
     .catch(() => cached);

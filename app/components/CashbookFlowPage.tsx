@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { rupiah } from '@/lib/format';
+import { formatDateTime, getErrorMessage, readJsonResponse, rupiah } from '@/lib/format';
 import {
   ArrowDownRight,
   ArrowUpRight,
@@ -29,21 +29,32 @@ export default function CashbookFlowPage({ type }: { type: FlowType }) {
   const [q, setQ] = useState('');
   const [date, setDate] = useState('');
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   const isIncome = type === 'INCOME';
   const pageTitle = isIncome ? 'Pemasukan' : 'Pengeluaran';
   const Icon = isIncome ? ArrowUpRight : ArrowDownRight;
   const TrendIcon = isIncome ? TrendingUp : TrendingDown;
 
-  useEffect(() => {
-    async function load() {
-      setLoading(true);
+  async function load() {
+    setLoading(true);
+    setError('');
+
+    try {
       const res = await fetch('/api/cashbook');
-      const data = await res.json();
+      const data = await readJsonResponse<Item[]>(res);
+      if (!res.ok) throw new Error('Gagal memuat buku kas');
       setItems(Array.isArray(data) ? data : []);
       setLoading(false);
+    } catch (loadError) {
+      setItems([]);
+      setError(getErrorMessage(loadError, 'Gagal memuat buku kas'));
+      setLoading(false);
     }
-    load();
+  }
+
+  useEffect(() => {
+    void load();
   }, []);
 
   const filtered = useMemo(() => {
@@ -136,6 +147,16 @@ export default function CashbookFlowPage({ type }: { type: FlowType }) {
           </div>
         </div>
 
+        {error && (
+          <div className="toast error" style={{ marginBottom: 14 }}>
+            <FileText size={17} />
+            <span>{error}</span>
+            <button className="btn btn-secondary" type="button" onClick={load}>
+              Coba Lagi
+            </button>
+          </div>
+        )}
+
         {loading ? (
           <div className="loading-state">
             <span className="spinner" />
@@ -164,7 +185,7 @@ export default function CashbookFlowPage({ type }: { type: FlowType }) {
                   {filtered.map((item) => (
                     <tr key={item.id}>
                       <td style={{ color: '#6b7280', fontWeight: 750, whiteSpace: 'nowrap' }}>
-                        {new Date(item.createdAt).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })}
+                        {formatDateTime(item.createdAt)}
                       </td>
                       <td style={{ fontWeight: 850 }}>{item.category}</td>
                       <td style={{ color: '#6b7280', maxWidth: 260, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.description || '-'}</td>
@@ -185,7 +206,7 @@ export default function CashbookFlowPage({ type }: { type: FlowType }) {
                   <div className="mobile-data-row"><span>Nominal</span><strong>{isIncome ? '+' : '-'} {rupiah(item.amount)}</strong></div>
                   <div className="mobile-data-row"><span>Keterangan</span><strong>{item.description || '-'}</strong></div>
                   <div className="mobile-data-row"><span>Operator</span><strong>{item.cashierName || '-'}</strong></div>
-                  <div className="mobile-data-row"><span>Tanggal</span><strong>{new Date(item.createdAt).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })}</strong></div>
+                  <div className="mobile-data-row"><span>Tanggal</span><strong>{formatDateTime(item.createdAt)}</strong></div>
                 </article>
               ))}
             </div>

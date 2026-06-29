@@ -2,6 +2,7 @@
 
 import { FormEvent, Suspense, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { getErrorMessage, readJsonResponse } from '@/lib/format';
 import { CircleDollarSign, LockKeyhole, LogIn, ReceiptText, ShieldCheck, Sparkles } from 'lucide-react';
 
 function LoginForm() {
@@ -22,14 +23,14 @@ function LoginForm() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Login gagal');
+      const data = await readJsonResponse<{ message?: string }>(res);
+      if (!res.ok) throw new Error(data?.message || 'Login gagal');
 
       const next = searchParams.get('next') || '/kasir';
       router.replace(next.startsWith('/') ? next : '/kasir');
       router.refresh();
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'Login gagal');
+      setMessage(getErrorMessage(error, 'Login gagal'));
     } finally {
       setLoading(false);
     }
@@ -124,8 +125,36 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<LoginLoading />}>
       <LoginForm />
     </Suspense>
+  );
+}
+
+function LoginLoading() {
+  return (
+    <main className="login-shell">
+      <section className="login-visual">
+        <div>
+          <span className="brand">
+            <span className="brand-mark"><CircleDollarSign size={22} /></span>
+            <span className="brand-copy">
+              <strong>PASUNDAN POS</strong>
+              <small>Premium Retail Suite</small>
+            </span>
+          </span>
+          <h1>Memuat halaman login.</h1>
+          <p>Menyiapkan tampilan aplikasi kasir.</p>
+        </div>
+      </section>
+      <section className="login-panel-wrap">
+        <div className="login-panel glass">
+          <div className="loading-state">
+            <span className="spinner" />
+            <strong>Memuat login</strong>
+          </div>
+        </div>
+      </section>
+    </main>
   );
 }

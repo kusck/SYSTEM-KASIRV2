@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { rupiah } from '@/lib/format';
+import { formatDateTime, getErrorMessage, readJsonResponse, rupiah } from '@/lib/format';
 import {
   Activity,
   ArrowDownRight,
@@ -44,12 +44,30 @@ function MiniChart() {
 
 export default function DashboardPage() {
   const [data, setData] = useState<Summary | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  async function load() {
+    setLoading(true);
+    setError('');
+
+    try {
+      const res = await fetch('/api/cashbook/summary');
+      const payload = await readJsonResponse<Summary>(res);
+      if (!res.ok || !payload) throw new Error('Gagal memuat ringkasan dashboard');
+      setData(payload);
+    } catch (loadError) {
+      setError(getErrorMessage(loadError, 'Gagal memuat ringkasan dashboard'));
+    } finally {
+      setLoading(false);
+    }
+  }
 
   useEffect(() => {
-    fetch('/api/cashbook/summary').then((res) => res.json()).then(setData);
+    void load();
   }, []);
 
-  if (!data) {
+  if (loading && !data) {
     return (
       <div className="page-stack">
         <div className="page-header">
@@ -67,6 +85,40 @@ export default function DashboardPage() {
               <div className="skeleton" style={{ width: '80%', height: 30, borderRadius: 999, marginTop: 14 }} />
             </div>
           ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (error && !data) {
+    return (
+      <div className="page-stack">
+        <div className="page-header">
+          <div>
+            <span className="eyebrow"><Activity size={14} /> Dashboard</span>
+            <h1>Dashboard belum bisa dimuat</h1>
+            <p>{error}</p>
+          </div>
+          <button className="btn btn-primary btn-mobile-full" type="button" onClick={load}>
+            Coba Lagi
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!data) {
+    return (
+      <div className="page-stack">
+        <div className="page-header">
+          <div>
+            <span className="eyebrow"><Activity size={14} /> Dashboard</span>
+            <h1>Data dashboard kosong</h1>
+            <p>Coba muat ulang ringkasan bisnis.</p>
+          </div>
+          <button className="btn btn-primary btn-mobile-full" type="button" onClick={load}>
+            Coba Lagi
+          </button>
         </div>
       </div>
     );
@@ -233,7 +285,7 @@ export default function DashboardPage() {
                   {data.recent.map((item) => (
                     <tr key={item.id}>
                       <td style={{ color: '#6b7280', fontWeight: 750, whiteSpace: 'nowrap' }}>
-                        {new Date(item.createdAt).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })}
+                        {formatDateTime(item.createdAt)}
                       </td>
                       <td>
                         <span className={`badge ${item.type === 'INCOME' ? 'badge-income' : 'badge-expense'}`}>
@@ -269,7 +321,7 @@ export default function DashboardPage() {
                   <div className="mobile-data-row"><span>Nominal</span><strong>{item.type === 'INCOME' ? '+' : '-'} {rupiah(item.amount)}</strong></div>
                   <div className="mobile-data-row"><span>Kategori</span><strong>{item.category}</strong></div>
                   <div className="mobile-data-row"><span>Keterangan</span><strong>{item.description || '-'}</strong></div>
-                  <div className="mobile-data-row"><span>Waktu</span><strong>{new Date(item.createdAt).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })}</strong></div>
+                  <div className="mobile-data-row"><span>Waktu</span><strong>{formatDateTime(item.createdAt)}</strong></div>
                 </article>
               ))}
             </div>

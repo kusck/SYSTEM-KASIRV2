@@ -1,1 +1,36 @@
-{"scripts":{"dev":"next dev","build":"next build","start":"next start","postinstall":"prisma generate"},"dependencies":{"@prisma/adapter-pg":"^7.8.0","@prisma/client":"latest","@tailwindcss/postcss":"^4.3.1","lucide-react":"latest","next":"latest","pg":"^8.22.0","react":"latest","react-dom":"latest"},"devDependencies":{"@types/node":"latest","@types/pg":"^8.20.0","@types/react":"latest","@types/react-dom":"latest","autoprefixer":"latest","postcss":"latest","prisma":"^7.8.0","tailwindcss":"latest","typescript":"latest"}}
+{
+  "scripts": {
+    "dev": "next dev --webpack",
+    "build": "next build --webpack",
+    "start": "next start",
+    "postinstall": "prisma generate"
+  },
+  "dependencies": {
+    "@prisma/adapter-pg": "^7.8.0",
+    "@prisma/client": "latest",
+    "@tailwindcss/postcss": "^4.3.1",
+    "lucide-react": "latest",
+    "next": "latest",
+    "pg": "^8.22.0",
+    "react": "latest",
+    "react-dom": "latest"
+  },
+  "devDependencies": {
+    "@types/node": "latest",
+    "@types/pg": "^8.20.0",
+    "@types/react": "latest",
+    "@types/react-dom": "latest",
+    "autoprefixer": "latest",
+    "postcss": "latest",
+    "prisma": "^7.8.0",
+    "tailwindcss": "latest",
+    "typescript": "latest"
+  },
+  "browserslist": [
+    "chrome >= 70",
+    "and_chr >= 70",
+    "samsung >= 10",
+    "ios_saf >= 12",
+    "safari >= 12"
+  ]
+}

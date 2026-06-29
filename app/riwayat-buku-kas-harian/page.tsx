@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { rupiah } from '@/lib/format';
+import { formatDate, getErrorMessage, readJsonResponse, rupiah } from '@/lib/format';
 import {
   ArrowDownRight,
   ArrowUpRight,
@@ -27,17 +27,6 @@ type DailyHistory = {
   createdBy: string;
 };
 
-async function readJsonResponse(res: Response) {
-  const text = await res.text();
-  if (!text) return null;
-
-  try {
-    return JSON.parse(text);
-  } catch {
-    throw new Error('Server mengirim response tidak valid. Cek migration Supabase dan log Vercel.');
-  }
-}
-
 export default function RiwayatBukuKasHarianPage() {
   const [items, setItems] = useState<DailyHistory[]>([]);
   const [loading, setLoading] = useState(true);
@@ -48,11 +37,11 @@ export default function RiwayatBukuKasHarianPage() {
     setLoading(true);
     try {
       const res = await fetch('/api/cashbook/history');
-      const data = await readJsonResponse(res);
-      if (!res.ok) throw new Error(data?.message || 'Gagal memuat riwayat');
+      const data = await readJsonResponse<DailyHistory[] | { message?: string }>(res);
+      if (!res.ok) throw new Error(!Array.isArray(data) ? data?.message || 'Gagal memuat riwayat' : 'Gagal memuat riwayat');
       setItems(Array.isArray(data) ? data : []);
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'Gagal memuat riwayat');
+      setMessage(getErrorMessage(error, 'Gagal memuat riwayat'));
     } finally {
       setLoading(false);
     }
@@ -86,12 +75,12 @@ export default function RiwayatBukuKasHarianPage() {
         },
         body: JSON.stringify({ actor: 'Admin' }),
       });
-      const data = await readJsonResponse(res);
-      if (!res.ok) throw new Error(data.message || 'Reset manual gagal');
-      setMessage(data.message || 'Reset manual berhasil');
+      const data = await readJsonResponse<{ message?: string }>(res);
+      if (!res.ok) throw new Error(data?.message || 'Reset manual gagal');
+      setMessage(data?.message || 'Reset manual berhasil');
       await load();
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'Reset manual gagal');
+      setMessage(getErrorMessage(error, 'Reset manual gagal'));
     } finally {
       setResetting(false);
     }
@@ -197,7 +186,7 @@ export default function RiwayatBukuKasHarianPage() {
                   {items.map((item) => (
                     <tr key={item.id}>
                       <td style={{ whiteSpace: 'nowrap', fontWeight: 850 }}>
-                        {new Date(`${item.resetDate}T00:00:00+07:00`).toLocaleDateString('id-ID', { dateStyle: 'medium', timeZone: 'Asia/Jakarta' })}
+                        {formatDate(`${item.resetDate}T00:00:00+07:00`)}
                       </td>
                       <td style={{ color: '#047857', fontWeight: 900, whiteSpace: 'nowrap' }}>{rupiah(item.totalIncome)}</td>
                       <td style={{ color: '#dc2626', fontWeight: 900, whiteSpace: 'nowrap' }}>{rupiah(item.totalExpense)}</td>
@@ -224,7 +213,7 @@ export default function RiwayatBukuKasHarianPage() {
                 <article className="mobile-data-card" key={item.id}>
                   <div className="mobile-data-row">
                     <span>Tanggal</span>
-                    <strong>{new Date(`${item.resetDate}T00:00:00+07:00`).toLocaleDateString('id-ID', { dateStyle: 'medium', timeZone: 'Asia/Jakarta' })}</strong>
+                    <strong>{formatDate(`${item.resetDate}T00:00:00+07:00`)}</strong>
                   </div>
                   <div className="mobile-data-row"><span>Pemasukan</span><strong>{rupiah(item.totalIncome)}</strong></div>
                   <div className="mobile-data-row"><span>Pengeluaran</span><strong>{rupiah(item.totalExpense)}</strong></div>
