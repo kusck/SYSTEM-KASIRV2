@@ -93,6 +93,23 @@ export default function NavbarClient({ children }: { children: ReactNode }) {
   }, [pathname]);
 
   useEffect(() => {
+    if (!drawerOpen) return;
+
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key === 'Escape') setDrawerOpen(false);
+    }
+
+    window.addEventListener('keydown', closeOnEscape);
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      window.removeEventListener('keydown', closeOnEscape);
+    };
+  }, [drawerOpen]);
+
+  useEffect(() => {
     setNow(new Date());
     const timer = window.setInterval(() => setNow(new Date()), 1000);
     return () => window.clearInterval(timer);
@@ -106,6 +123,11 @@ export default function NavbarClient({ children }: { children: ReactNode }) {
     } finally {
       window.location.href = '/login';
     }
+  }
+
+  function openDrawer() {
+    setProfileOpen(false);
+    setDrawerOpen(true);
   }
 
   if (isLogin) return <>{children}</>;
@@ -166,8 +188,20 @@ export default function NavbarClient({ children }: { children: ReactNode }) {
             <button
               type="button"
               className="mobile-menu-button"
-              onClick={() => setDrawerOpen(true)}
+              onClick={openDrawer}
+              onPointerUp={(event) => {
+                if (event.pointerType !== 'mouse') {
+                  event.preventDefault();
+                  openDrawer();
+                }
+              }}
+              onTouchEnd={(event) => {
+                event.preventDefault();
+                openDrawer();
+              }}
               aria-label="Buka menu"
+              aria-expanded={drawerOpen}
+              aria-controls="mobile-navigation-drawer"
             >
               <Menu size={22} />
             </button>
@@ -228,7 +262,12 @@ export default function NavbarClient({ children }: { children: ReactNode }) {
       </div>
 
       <div className={`drawer-overlay ${drawerOpen ? 'is-open' : ''}`} onClick={() => setDrawerOpen(false)} />
-      <aside className={`mobile-drawer ${drawerOpen ? 'is-open' : ''}`} aria-label="Menu mobile" aria-hidden={!drawerOpen}>
+      <aside
+        id="mobile-navigation-drawer"
+        className={`mobile-drawer ${drawerOpen ? 'is-open' : ''}`}
+        aria-label="Menu mobile"
+        aria-hidden={!drawerOpen}
+      >
         <div className="mobile-drawer-head">
           <Brand />
           <button type="button" className="topbar-icon" onClick={() => setDrawerOpen(false)} aria-label="Tutup menu">

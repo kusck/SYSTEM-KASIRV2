@@ -3,6 +3,7 @@
     "dev": "next dev --webpack",
     "build": "next build --webpack",
     "start": "next start",
+    "db:reset:data": "node scripts/reset-data.js",
     "postinstall": "prisma generate"
   },
   "dependencies": {

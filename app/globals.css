@@ -98,6 +98,7 @@
 }
 
 .pos-shell {
+  width: 100%;
   min-height: 100vh;
   display: grid;
   grid-template-columns: 280px minmax(0, 1fr);
@@ -173,6 +174,9 @@
 .sidebar-collapse,
 .topbar-icon,
 .mobile-menu-button {
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: manipulation;
   width: 42px;
   height: 42px;
   display: inline-flex;
@@ -309,12 +313,14 @@
 
 .pos-main {
   min-width: 0;
+  overflow: hidden;
 }
 
 .topbar {
   position: sticky;
   top: 0;
   z-index: 40;
+  isolation: isolate;
   min-height: 78px;
   display: grid;
   grid-template-columns: minmax(190px, 1fr) minmax(260px, 520px) auto;
@@ -329,9 +335,16 @@
 }
 
 .topbar-left {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
   display: flex;
   align-items: center;
   gap: 12px;
+}
+
+.topbar-left > div {
+  min-width: 0;
 }
 
 .page-kicker {
@@ -350,6 +363,9 @@
   line-height: 1.15;
   font-weight: 850;
   letter-spacing: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .topbar-search {
@@ -380,6 +396,7 @@
 }
 
 .topbar-actions {
+  min-width: 0;
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -437,6 +454,8 @@
 
 .mobile-menu-button {
   display: none;
+  z-index: 2;
+  pointer-events: auto;
 }
 
 .profile-menu {
@@ -565,10 +584,13 @@
   inset: 0 auto 0 0;
   z-index: 80;
   width: min(88vw, 340px);
+  max-width: 100%;
+  height: 100vh;
   display: flex;
   flex-direction: column;
   gap: 18px;
   padding: 16px;
+  overflow: hidden;
   color: #fff;
   background:
     linear-gradient(135deg, rgba(255, 255, 255, 0.08), transparent 38%),
@@ -589,6 +611,10 @@
   gap: 12px;
 }
 
+.mobile-drawer-head .brand {
+  min-width: 0;
+}
+
 .mobile-drawer .topbar-icon {
   color: #fff;
   background: rgba(255, 255, 255, 0.1);
@@ -597,6 +623,8 @@
 }
 
 .mobile-nav {
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
 }
 
@@ -888,6 +916,7 @@
 }
 
 .section-heading {
+  min-width: 0;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -907,6 +936,17 @@
 
 .section-title h2 {
   font-size: 19px;
+}
+
+.section-title {
+  min-width: 0;
+}
+
+.section-title h2,
+.section-title p,
+.page-header h1,
+.page-header p {
+  overflow-wrap: anywhere;
 }
 
 .btn {
@@ -930,6 +970,12 @@
   text-decoration: none;
   white-space: nowrap;
   transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease, border-color 180ms ease, color 180ms ease;
+}
+
+.btn svg,
+.segment svg,
+.badge svg {
+  flex: 0 0 auto;
 }
 
 .btn::after {
@@ -1072,6 +1118,7 @@
 
 .input-shell {
   position: relative;
+  min-width: 0;
 }
 
 .input-shell .input,
@@ -1111,6 +1158,7 @@
 }
 
 .segmented {
+  max-width: 100%;
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -1432,6 +1480,54 @@
   font-weight: 850;
 }
 
+.thermal-print-panel {
+  display: grid;
+  gap: 14px;
+  margin-top: 16px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 16px;
+  background: #f8faf9;
+}
+
+.thermal-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.thermal-actions .btn {
+  min-height: 42px;
+  padding-inline: 12px;
+}
+
+.printer-status-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.printer-status-grid span {
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid var(--border);
+  border-radius: 13px;
+  padding: 0 10px;
+  color: var(--muted);
+  background: #fff;
+  font-size: 12px;
+  font-weight: 800;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.receipt-print-area {
+  display: none;
+}
+
 .product-card {
   overflow: hidden;
   background: #fff;
@@ -1695,6 +1791,10 @@
   .pos-sidebar {
     height: 100dvh;
   }
+
+  .mobile-drawer {
+    height: 100dvh;
+  }
 }
 
 .app-fallback-screen {
@@ -1843,7 +1943,83 @@
   background: rgba(11, 61, 46, 0.34);
 }
 
+@media print {
+  @page {
+    size: 58mm auto;
+    margin: 0;
+  }
+
+  html,
+  body {
+    width: 58mm;
+    margin: 0;
+    overflow: visible;
+    background: #fff !important;
+  }
+
+  body * {
+    visibility: hidden !important;
+  }
+
+  .receipt-print-area,
+  .receipt-print-area * {
+    visibility: visible !important;
+  }
+
+  .receipt-print-area {
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 58mm;
+    display: block !important;
+    padding: 3mm 2.5mm 5mm;
+    color: #000;
+    background: #fff;
+  }
+
+  .receipt-print-area pre {
+    width: 100%;
+    margin: 0;
+    color: #000;
+    background: #fff;
+    white-space: pre-wrap;
+    font-family: "Courier New", ui-monospace, monospace;
+    font-size: 10px;
+    line-height: 1.25;
+    font-weight: 700;
+  }
+}
+
 @media (max-width: 1280px) {
+  .pos-shell,
+  .pos-shell.is-collapsed {
+    display: block;
+  }
+
+  .pos-sidebar {
+    display: none;
+  }
+
+  .topbar {
+    min-height: 70px;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 12px;
+    padding: 12px 20px;
+  }
+
+  .mobile-menu-button {
+    display: inline-flex;
+  }
+
+  .topbar-search,
+  .clock-pill {
+    display: none;
+  }
+
+  .app-content {
+    width: 100%;
+    padding: 22px 20px 44px;
+  }
+
   .stats-grid,
   .product-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1861,29 +2037,11 @@
 }
 
 @media (max-width: 1024px) {
-  .pos-shell,
-  .pos-shell.is-collapsed {
-    display: block;
-  }
-
-  .pos-sidebar {
-    display: none;
-  }
-
   .topbar {
     min-height: 66px;
     grid-template-columns: minmax(0, 1fr) auto;
     gap: 12px;
     padding: 10px 16px;
-  }
-
-  .mobile-menu-button {
-    display: inline-flex;
-  }
-
-  .topbar-search,
-  .clock-pill {
-    display: none;
   }
 
   .profile-copy,
@@ -1912,6 +2070,62 @@
 
   .topbar h1 {
     font-size: 19px;
+  }
+}
+
+@media (max-width: 900px) {
+  .stats-grid,
+  .summary-grid,
+  .product-grid,
+  .three-grid,
+  .two-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .page-header,
+  .toolbar {
+    display: grid;
+    align-items: start;
+  }
+
+  .toolbar-actions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .toolbar-actions .input-shell {
+    min-width: 0 !important;
+  }
+
+  .toolbar-actions .segmented,
+  .segmented {
+    width: 100%;
+  }
+
+  .segmented {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+  }
+
+  .segment {
+    min-width: 0;
+    padding-inline: 10px;
+    text-align: center;
+  }
+
+  .desktop-table {
+    display: none;
+  }
+
+  .mobile-card-list {
+    display: grid;
+  }
+
+  .btn-mobile-full,
+  .toolbar-actions .btn,
+  .button-row .btn {
+    width: 100%;
   }
 }
 
@@ -2013,6 +2227,11 @@
   .segment,
   .btn {
     min-height: 48px;
+  }
+
+  .thermal-actions,
+  .printer-status-grid {
+    grid-template-columns: 1fr;
   }
 
   .btn-mobile-full,

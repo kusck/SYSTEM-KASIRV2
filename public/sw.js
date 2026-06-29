@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pasundan-pos-v2-android9';
+const CACHE_NAME = 'pasundan-pos-v3-tablet-nav';
 const STATIC_CACHE_URLS = [
   '/',
   '/dashboard',

@@ -1,2 +1,5 @@
 node_modules
 .next/
+.codex-screenshots/
+.chrome-cdp-profile*/
+.next-dev*.log
