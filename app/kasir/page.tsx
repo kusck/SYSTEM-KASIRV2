@@ -371,6 +371,20 @@ export default function KasirPage() {
     }
   }
 
+  async function printDefaultReceipt() {
+    if (bluetoothCharacteristic || (navigator as BluetoothNavigator).bluetooth) {
+      await printBluetoothReceipt();
+      return;
+    }
+
+    if (usbConnection) {
+      await printUsbReceipt();
+      return;
+    }
+
+    printBrowserReceipt();
+  }
+
   function printBrowserReceipt() {
     const receipt = getReceiptForPrint();
     if (!receipt) return;
@@ -503,9 +517,9 @@ export default function KasirPage() {
               {loading ? <span className="button-spinner spinner" /> : <CreditCard size={17} />}
               {loading ? 'Menyimpan...' : 'Bayar Sekarang'}
             </button>
-            <button type="button" onClick={printBrowserReceipt} className="btn btn-secondary btn-mobile-full" disabled={!activeReceipt}>
-              <Printer size={17} />
-              Cetak
+            <button type="button" onClick={printDefaultReceipt} className="btn btn-secondary btn-mobile-full" disabled={!activeReceipt || printerBusy}>
+              {printerBusy ? <span className="button-spinner spinner" /> : <Printer size={17} />}
+              {printerBusy ? 'Mencetak...' : 'Cetak Struk'}
             </button>
             <button type="button" onClick={reset} className="btn btn-ghost btn-mobile-full">
               <RotateCcw size={17} />

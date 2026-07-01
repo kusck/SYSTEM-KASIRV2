@@ -1952,7 +1952,10 @@
   html,
   body {
     width: 58mm;
+    min-width: 58mm;
+    max-width: 58mm;
     margin: 0;
+    padding: 0;
     overflow: visible;
     background: #fff !important;
   }
@@ -1968,24 +1971,32 @@
 
   .receipt-print-area {
     position: absolute;
-    inset: 0 auto auto 0;
+    top: 0;
+    left: 0;
     width: 58mm;
+    min-width: 58mm;
+    max-width: 58mm;
     display: block !important;
-    padding: 3mm 2.5mm 5mm;
+    padding: 3mm 3mm 5mm;
     color: #000;
     background: #fff;
+    text-align: left;
+    transform: none;
   }
 
   .receipt-print-area pre {
-    width: 100%;
-    margin: 0;
+    width: 32ch;
+    max-width: 100%;
+    margin: 0 auto;
     color: #000;
     background: #fff;
-    white-space: pre-wrap;
+    overflow: hidden;
+    white-space: pre;
     font-family: "Courier New", ui-monospace, monospace;
     font-size: 10px;
-    line-height: 1.25;
+    line-height: 1.22;
     font-weight: 700;
+    text-align: left;
   }
 }
 
