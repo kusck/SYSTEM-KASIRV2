@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { formatInputNumber, getErrorMessage, readJsonResponse, rupiah } from '@/lib/format';
 import { buildEscPosReceipt, buildReceiptText, type ReceiptData } from '@/lib/thermalReceipt';
 import {
@@ -80,6 +80,26 @@ type BluetoothNavigator = Navigator & {
   };
 };
 
+type SerialPortInfoLike = {
+  usbVendorId?: number;
+  usbProductId?: number;
+};
+
+type SerialPortLike = {
+  readable?: ReadableStream<Uint8Array> | null;
+  writable?: WritableStream<Uint8Array> | null;
+  open: (options: { baudRate: number; bufferSize?: number }) => Promise<void>;
+  close?: () => Promise<void>;
+  getInfo?: () => SerialPortInfoLike;
+};
+
+type SerialNavigator = Navigator & {
+  serial?: {
+    getPorts?: () => Promise<SerialPortLike[]>;
+    requestPort: () => Promise<SerialPortLike>;
+  };
+};
+
 type UsbEndpointLike = {
   endpointNumber: number;
   direction: 'in' | 'out';
@@ -149,6 +169,7 @@ export default function KasirPage() {
   const [printMessage, setPrintMessage] = useState('');
   const [printerBusy, setPrinterBusy] = useState(false);
   const [lastReceipt, setLastReceipt] = useState<ReceiptData | null>(null);
+  const [serialPort, setSerialPort] = useState<SerialPortLike | null>(null);
   const [bluetoothCharacteristic, setBluetoothCharacteristic] = useState<BluetoothCharacteristicLike | null>(null);
   const [bluetoothPrinterName, setBluetoothPrinterName] = useState('');
   const [usbConnection, setUsbConnection] = useState<UsbPrinterConnection | null>(null);
@@ -172,6 +193,25 @@ export default function KasirPage() {
       createdAt: new Date().toISOString(),
     };
   }, [cashier, change, lastReceipt, paidNumber, totalNumber]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function restoreSerialPrinter() {
+      const ports = await (navigator as SerialNavigator).serial?.getPorts?.().catch(() => []);
+      const port = ports?.[0];
+      if (!port || cancelled) return;
+
+      setSerialPort(port);
+      setBluetoothPrinterName('Bluetooth COM');
+    }
+
+    restoreSerialPrinter();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   function clearPrintStateForNewInput() {
     setLastReceipt(null);
@@ -290,12 +330,69 @@ export default function KasirPage() {
     }
   }
 
+  async function openSerialPrinterPort(port: SerialPortLike) {
+    if (!port.writable) {
+      await port.open({ baudRate: 9600, bufferSize: 4096 });
+    }
+
+    if (!port.writable) {
+      throw new Error('Port Bluetooth belum siap menerima data print.');
+    }
+
+    return port;
+  }
+
+  async function connectBluetoothSerialPrinter() {
+    const serial = (navigator as SerialNavigator).serial;
+    if (!serial) {
+      throw new Error('Web Serial tidak didukung browser ini.');
+    }
+
+    const port = await serial.requestPort();
+    await openSerialPrinterPort(port);
+
+    const info = port.getInfo?.();
+    const suffix = info?.usbVendorId ? ` ${info.usbVendorId.toString(16).toUpperCase()}` : '';
+    const printerName = `Bluetooth COM${suffix}`;
+
+    setSerialPort(port);
+    setBluetoothPrinterName(printerName);
+    setPrintMessage(`${printerName} terhubung.`);
+
+    return port;
+  }
+
+  async function writeSerialReceipt(port: SerialPortLike, receipt: ReceiptData) {
+    const connection = await openSerialPrinterPort(port);
+    const writer = connection.writable?.getWriter();
+    if (!writer) {
+      throw new Error('Port Bluetooth tidak bisa menerima data print.');
+    }
+
+    const bytes = buildEscPosReceipt(receipt);
+    try {
+      for (const chunk of byteChunks(bytes, 512)) {
+        await writer.write(chunk);
+        await delay(8);
+      }
+    } finally {
+      writer.releaseLock();
+    }
+  }
+
   async function printBluetoothReceipt() {
     const receipt = getReceiptForPrint();
     if (!receipt) return;
 
     setPrinterBusy(true);
     try {
+      if ((navigator as SerialNavigator).serial) {
+        const port = serialPort || (await connectBluetoothSerialPrinter());
+        await writeSerialReceipt(port, receipt);
+        setPrintMessage('Struk terkirim ke printer Bluetooth.');
+        return;
+      }
+
       const characteristic = bluetoothCharacteristic || (await connectBluetoothPrinter());
       await writeBluetoothReceipt(characteristic, receipt);
       setPrintMessage('Struk terkirim ke printer Bluetooth.');
@@ -372,7 +469,7 @@ export default function KasirPage() {
   }
 
   async function printDefaultReceipt() {
-    if (bluetoothCharacteristic || (navigator as BluetoothNavigator).bluetooth) {
+    if (serialPort || (navigator as SerialNavigator).serial || bluetoothCharacteristic || (navigator as BluetoothNavigator).bluetooth) {
       await printBluetoothReceipt();
       return;
     }

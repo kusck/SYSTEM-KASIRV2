@@ -7,7 +7,7 @@ export type ReceiptData = {
   createdAt: string;
 };
 
-const LINE_WIDTH = 32;
+const LINE_WIDTH = 30;
 const PAPER_DOTS_58MM = 384;
 
 function money(value: number) {
@@ -68,7 +68,7 @@ export function buildEscPosReceipt(receipt: ReceiptData) {
   const parts: Array<number[] | Uint8Array> = [];
 
   const command = (...bytes: number[]) => parts.push(bytes);
-  const line = (text = '') => parts.push(encoder.encode(`${clean(text)}\n`));
+  const line = (text = '') => parts.push(encoder.encode(`${clean(text)}\r\n`));
   const lines = (...values: string[]) => values.forEach((value) => line(value));
 
   command(0x1b, 0x40); // Initialize printer.
@@ -77,9 +77,12 @@ export function buildEscPosReceipt(receipt: ReceiptData) {
   command(0x1b, 0x32); // Default line spacing.
   command(0x1d, 0x4c, 0x00, 0x00); // Left margin 0.
   command(0x1d, 0x57, PAPER_DOTS_58MM & 0xff, PAPER_DOTS_58MM >> 8); // 58mm print area.
+  command(0x1b, 0x45, 0x01); // Bold text for clearer 58mm receipts.
 
   command(0x1b, 0x61, 0x01); // Center.
+  command(0x1d, 0x21, 0x11); // Double width and height.
   lines('PASUNDAN POS', 'STRUK PEMBAYARAN');
+  command(0x1d, 0x21, 0x00); // Normal size.
 
   command(0x1b, 0x61, 0x00); // Left.
   lines(
@@ -90,7 +93,13 @@ export function buildEscPosReceipt(receipt: ReceiptData) {
     '-'.repeat(LINE_WIDTH),
     pair('Penjualan Manual', money(receipt.total)),
     '-'.repeat(LINE_WIDTH),
-    pair('TOTAL', money(receipt.total)),
+  );
+
+  command(0x1d, 0x21, 0x10); // Double height, keep line width aligned.
+  lines(pair('TOTAL', money(receipt.total)));
+  command(0x1d, 0x21, 0x00);
+
+  lines(
     pair('TUNAI', money(receipt.paidAmount)),
     pair('KEMBALI', money(receipt.change)),
     '-'.repeat(LINE_WIDTH),
@@ -98,6 +107,7 @@ export function buildEscPosReceipt(receipt: ReceiptData) {
 
   command(0x1b, 0x61, 0x01); // Center.
   lines('Terima kasih', 'PASUNDAN POS', '', '');
+  command(0x1b, 0x45, 0x00);
   command(0x1b, 0x61, 0x00);
   command(0x0a, 0x0a);
   command(0x1d, 0x56, 0x42, 0x00); // Partial cut, ignored by printers without cutter.
